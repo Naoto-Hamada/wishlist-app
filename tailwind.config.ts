@@ -17,3 +17,36 @@ const config: Config = {
   plugins: [],
 };
 export default config;
+
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          start: '#00FFFF',
+          end: '#008080',
+        },
+        accent: {
+          1: '#FF6B6B',
+          2: '#FFD93D',
+        },
+        text: {
+          primary: '#333333',
+          secondary: '#666666',
+          inverted: '#FFFFFF',
+        },
+        background: {
+          main: '#F0F8FF',
+          secondary: '#E0FFFF',
+        },
+      },
+      gradientColorStops: theme => ({
+        'primary-start': theme('colors.primary.start'),
+        'primary-end': theme('colors.primary.end'),
+      }),
+    },
+  },
+  variants: {},
+  plugins: [],
+}

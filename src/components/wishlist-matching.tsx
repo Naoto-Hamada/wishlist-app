@@ -30,7 +30,7 @@ const sampleData: WishlistItem[] = [
     title: '京都で茶道体験',
     budget: '¥5,000',
     duration: '2時間',
-    description: '伝統的な日本文化である茶道を体験。静寂な茶室で、お茶の作法を学びながら心を落ち着かせる時間を過ごします。'
+    description: '伝統的な日本文化である茶道体験。静寂な茶室で、お茶の作法を学びながら心を落ち着かせる時間を過ごします。'
   },
   {
     id: 3,
@@ -90,16 +90,23 @@ export function WishlistMatchingComponent() {
   const handleSwipe = (dir: 'left' | 'down' | 'right') => {
     setDirection(dir)
     if (dir === 'left') {
-      api.start({ x: -500, rotation: -10, opacity: 0 })
+      api.start({ x: -120, rotation: -10, opacity: 0 })
     } else if (dir === 'down') {
-      api.start({ y: 500, opacity: 0 })
+      api.start({ y: 120, opacity: 0 })
     } else {
-      api.start({ x: 500, rotation: 10, opacity: 0 })
+      api.start({ x: 120, rotation: 10, opacity: 0 })
     }
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % sampleData.length)
       setDirection(null)
-      api.start({ x: 0, y: 0, rotation: 0, opacity: 1 })
+      api.start({ 
+        from: { 
+          x: dir === 'left' ? 100 : dir === 'right' ? -100 : 0, 
+          y: dir === 'down' ? -100 : 0, 
+          opacity: 0 
+        }, 
+        to: { x: 0, y: 0, rotation: 0, opacity: 1 } 
+      })
     }, 300)
   }
 
@@ -119,10 +126,11 @@ export function WishlistMatchingComponent() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-md mx-auto">
-        <div className="relative h-[400px] mb-8">
+        <div className="relative h-[400px] mb-8 overflow-hidden">
           <animated.div
             style={{
               ...props,
+              transform: props.x.to(x => `translateX(${x}%) rotate(${props.rotation.get()}deg)`),
               position: 'absolute',
               width: '100%',
               height: '100%',

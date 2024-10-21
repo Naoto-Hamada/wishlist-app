@@ -121,7 +121,7 @@ export function WishlistMatchingComponent() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-md mx-auto">
-        <div className="relative h-[400px] mb-8 overflow-hidden">
+        <div className="relative h-[400px] mb-4 sm:mb-6 overflow-hidden">
           <animated.div
             style={{
               ...props,
@@ -146,7 +146,7 @@ export function WishlistMatchingComponent() {
             <Card item={nextItem} />
           </div>
         </div>
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-3 sm:mb-6">
           <button
             onClick={() => handleSwipe('left')}
             className="flex flex-col items-center"
@@ -175,7 +175,7 @@ export function WishlistMatchingComponent() {
             <span className="mt-2 text-sm text-gray-600">やったことある</span>
           </button>
         </div>
-        <div className="mb-8">
+        <div className="mb-3 sm:mb-6">
           <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
             <div
               className="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full"
@@ -184,7 +184,7 @@ export function WishlistMatchingComponent() {
           </div>
           <p className="text-center mt-2 text-sm text-gray-600">{currentIndex + 1}/{sampleData.length}</p>
         </div>
-        <div className="flex justify-center mb-12">
+        <div className="flex justify-center mb-2 sm:mb-4">
           <Dialog>
             <DialogTrigger asChild>
               <button className="flex items-center text-sm text-gray-600 hover:text-gray-800">

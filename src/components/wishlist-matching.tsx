@@ -82,9 +82,8 @@ export function WishlistMatchingComponent() {
     x: 0,
     y: 0,
     rotation: 0,
-    scale: 1,
     opacity: 1,
-    config: { tension: 300, friction: 20 },
+    config: { tension: 280, friction: 60 },
   }))
 
   const handleSwipe = (dir: 'left' | 'down' | 'right') => {
@@ -100,12 +99,8 @@ export function WishlistMatchingComponent() {
       setCurrentIndex((prev) => (prev + 1) % sampleData.length)
       setDirection(null)
       api.start({ 
-        from: { 
-          x: dir === 'left' ? 100 : dir === 'right' ? -100 : 0, 
-          y: dir === 'down' ? -100 : 0, 
-          opacity: 0 
-        }, 
-        to: { x: 0, y: 0, rotation: 0, opacity: 1 } 
+        from: { x: 0, y: 0, rotation: 0, opacity: 0 },
+        to: { x: 0, y: 0, rotation: 0, opacity: 1 }
       })
     }, 300)
   }

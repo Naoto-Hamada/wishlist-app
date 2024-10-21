@@ -28,15 +28,15 @@ export function Layout({ children }: LayoutProps) {
     <div className="flex flex-col min-h-screen">
       {/* ヘッダー */}
       <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-teal-400 to-blue-500 p-4 text-white flex justify-between items-center z-20">
-        <h1 className="text-2xl font-bold">Wish List</h1>
+        <h1 className="text-xl font-bold">Wish List</h1>
         <button onClick={toggleMenu} className="md:hidden text-white focus:outline-none" aria-label="メニューを開く">
           <Menu className="h-6 w-6" />
         </button>
       </header>
 
-      <div className="flex flex-grow mt-16">
+      <div className="flex flex-grow pt-16">
         {/* サイドバー（PC用） */}
-        <nav className="hidden md:block fixed top-16 left-0 w-64 h-[calc(100vh-8rem)] bg-white shadow-lg overflow-y-auto z-10">
+        <nav className="hidden md:block fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] bg-white shadow-lg overflow-y-auto z-10">
           <ul className="p-4">
             {menuItems.map((item, index) => (
               <li key={index} className="py-3">
@@ -75,13 +75,13 @@ export function Layout({ children }: LayoutProps) {
         )}
 
         {/* メインコンテンツ */}
-        <main className="flex-grow p-4 md:ml-64 mt-16 mb-16 md:mb-0">
+        <main className="flex-grow p-4 md:ml-64 mb-20">
           {children}
         </main>
       </div>
 
       {/* フッター */}
-      <footer className="bg-gray-800 text-white p-4 text-center relative z-20 md:fixed md:bottom-0 md:left-0 md:right-0">
+      <footer className="bg-gray-800 text-white p-4 text-center fixed bottom-0 left-0 right-0 z-20">
         <p>&copy; 2024 Wish List. All rights reserved.</p>
       </footer>
     </div>

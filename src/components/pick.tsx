@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { AlertCircle } from 'lucide-react'
+import { DndProvider, useDrag, useDrop } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
+import { TouchBackend } from 'react-dnd-touch-backend'
 
 import { Button } from '@/components/ui/button'
-// import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert' // Removed
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 type WishItem = {
   id: number
@@ -23,72 +25,143 @@ const wishItems: WishItem[] = [
   { id: 7, title: '写真展を開く', imageUrl: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=500&h=500&fit=crop' },
 ]
 
+const isTouchDevice = () => {
+  return (('ontouchstart' in window) ||
+    (navigator.maxTouchPoints > 0) ||
+    // @ts-ignore
+    (navigator.msMaxTouchPoints > 0));
+}
+
 export function WishlistMatching() {
   const [selectedItems, setSelectedItems] = useState<WishItem[]>([])
-  // const [showAlert, setShowAlert] = useState(false) // Removed
+  const [detailItem, setDetailItem] = useState<WishItem | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [backend, setBackend] = useState(() => HTML5Backend)
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
 
-  const toggleItem = (item: WishItem) => {
-    if (selectedItems.some(selectedItem => selectedItem.id === item.id)) {
-      setSelectedItems(selectedItems.filter(selectedItem => selectedItem.id !== item.id))
-    } else if (selectedItems.length < 5) {
+  useEffect(() => {
+    setBackend(() => isTouchDevice() ? TouchBackend : HTML5Backend)
+  }, [])
+
+  const moveItem = (item: WishItem, toSelected: boolean) => {
+    if (toSelected && selectedItems.length < 5) {
       setSelectedItems([...selectedItems, item])
+    } else if (toSelected && selectedItems.length >= 5) {
+      setIsErrorDialogOpen(true)  // ここでエラーダイアログを開く
+    } else if (!toSelected) {
+      setSelectedItems(selectedItems.filter(i => i.id !== item.id))
     }
+  }
+
+  const WishItemCard = ({ item, isSelected }: { item: WishItem; isSelected: boolean }) => {
+    const [{ isDragging }, drag] = useDrag(() => ({
+      type: 'wishItem',
+      item: { id: item.id, isSelected },
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
+      }),
+    }))
+
+    return (
+      <div
+        ref={drag}
+        className={`relative ${isDragging ? 'opacity-50' : ''}`}
+        onClick={() => {
+          setDetailItem(item)
+          setIsDialogOpen(true)
+        }}
+      >
+        <Image
+          src={item.imageUrl}
+          alt={item.title}
+          width={500}
+          height={500}
+          className="rounded-lg shadow-md cursor-pointer transition-transform hover:scale-105"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+          <span className="text-white text-center font-semibold px-2">{item.title}</span>
+        </div>
+        {isSelected && <span className="absolute top-2 left-2 bg-yellow-400 text-primary rounded-full p-1">★</span>}
+      </div>
+    )
+  }
+
+  const ItemsArea = ({ items, isSelected }: { items: WishItem[], isSelected: boolean }) => {
+    const [, drop] = useDrop(() => ({
+      accept: 'wishItem',
+      drop: (item: { id: number, isSelected: boolean }) => {
+        if (item.isSelected !== isSelected) {
+          const droppedItem = wishItems.find((wishItem) => wishItem.id === item.id)
+          if (droppedItem) moveItem(droppedItem, isSelected)
+        }
+      },
+    }))
+
+    return (
+      <div ref={drop} className="mb-8 bg-white rounded-lg p-4 shadow-md">
+        <h2 className="text-2xl font-semibold mb-4 text-primary">
+          {isSelected ? `選んだもの (${items.length}/5)` : 'やりたいことリスト'}
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {items.map(item => (
+            <WishItemCard key={item.id} item={item} isSelected={isSelected} />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   const remainingItems = wishItems.filter(item => !selectedItems.some(selectedItem => selectedItem.id === item.id))
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] pb-8">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-center text-primary">直近やりたいことを5つ選ぼう！</h1>
+    <DndProvider backend={backend}>
+      <div className="min-h-screen bg-[#F3F4F6] pb-8">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-6 text-center text-primary">直近やりたいことを5つ選ぼう！</h1>
 
-        {/* Removed showAlert and Alert component */}
+          <ItemsArea items={selectedItems} isSelected={true} />
+          <ItemsArea items={remainingItems} isSelected={false} />
 
-        <div className="mb-8 bg-white rounded-lg p-4 shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">選んだもの ({selectedItems.length}/5)</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {selectedItems.map(item => (
-              <div key={item.id} className="relative">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  width={500}
-                  height={500}
-                  className="rounded-lg shadow-md cursor-pointer transition-transform hover:scale-105"
-                  onClick={() => toggleItem(item)}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-                  <span className="text-white text-center font-semibold px-2">{item.title}</span>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-[425px] bg-white">
+              <DialogHeader>
+                <DialogTitle>{detailItem?.title}</DialogTitle>
+              </DialogHeader>
+              {detailItem && (
+                <div className="grid gap-4 py-4">
+                  <Image
+                    src={detailItem.imageUrl}
+                    alt={detailItem.title}
+                    width={500}
+                    height={500}
+                    className="rounded-lg shadow-md"
+                  />
+                  <Button onClick={() => {
+                    moveItem(detailItem, !selectedItems.some(item => item.id === detailItem.id))
+                    setIsDialogOpen(false)
+                  }}>
+                    {selectedItems.some(item => item.id === detailItem.id) ? '選択を解除' : '直近やりたい'}
+                  </Button>
                 </div>
-                <span className="absolute top-2 left-2 bg-yellow-400 text-primary rounded-full p-1">★</span>
-              </div>
-            ))}
-          </div>
-        </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
-        <div>
-          <h2 className="text-2xl font-semibold mb-4 text-primary">やりたいことリスト</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {remainingItems.map(item => (
-              <div key={item.id} className="relative">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  width={500}
-                  height={500}
-                  className="rounded-lg shadow-md cursor-pointer transition-transform hover:scale-105"
-                  onClick={() => toggleItem(item)}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-                  <span className="text-white text-center font-semibold px-2">{item.title}</span>
-                </div>
+          <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
+            <DialogContent className="sm:max-w-[425px] bg-white">
+              <DialogHeader>
+                <DialogTitle>申し訳ございません</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p>優先度が高いものに集中していただきたく、5つまでしか追加することはできません。</p>
               </div>
-            ))}
-          </div>
+              <Button onClick={() => setIsErrorDialogOpen(false)}>
+                閉じる
+              </Button>
+            </DialogContent>
+          </Dialog>
         </div>
-
-        {/* Removed the button */}
       </div>
-    </div>
+    </DndProvider>
   )
 }

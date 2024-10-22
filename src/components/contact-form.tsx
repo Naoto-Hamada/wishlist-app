@@ -42,7 +42,7 @@ export function ContactFormComponent() {
             </Alert>
           ) : (
             <iframe
-              src="https://docs.google.com/forms/d/e/124QeS-B_kTkOvkP4mMSwp0STQHKFm5_NAJA5W9eEvAY/viewform?embedded=true"
+              src="https://docs.google.com/forms/d/e/1FAIpQLSeR3hxJtzymGn9jQt6eJWyLXdywkTsY28Xoi1yIUdf25V-3SQ/viewform?embedded=true"
               width="100%"
               height="800"
               frameBorder="0"

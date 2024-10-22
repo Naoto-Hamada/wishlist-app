@@ -3,16 +3,8 @@
 import { ReactNode, useState } from "react"
 import { Menu, X, Home, Sparkles, ListChecks, Rocket, Settings, MessageCircle, LogOut } from "lucide-react"
 import Link from 'next/link'
-
-const menuItems = [
-  { icon: Home, label: "ホーム画面", href: "/" },
-  { icon: Sparkles, label: "やりたいことに出会う", href: "/match" },
-  { icon: ListChecks, label: "やりたいことを選ぶ", href: "/pick" },
-  { icon: Rocket, label: "行動を起こす", href: "/action" },
-  { icon: Settings, label: "設定", href: "/settingspage" },
-  { icon: MessageCircle, label: "お問い合わせ", href: "/contact" },
-  { icon: LogOut, label: "ログアウト", href: "/logout" }
-]
+import { usePathname } from 'next/navigation'
+import { Card, CardContent, Button } from '@mui/material'
 
 type LayoutProps = {
   children: ReactNode
@@ -20,10 +12,36 @@ type LayoutProps = {
 
 export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const pathname = usePathname()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true)
+  }
+
+  const confirmLogout = () => {
+    // ここにログアウト処理を追加
+    // 例: logout()
+    window.location.href = '/login' // ログイン画面へ遷移
+  }
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false)
+  }
+
+  const menuItems = [
+    { icon: Home, label: "ホーム画面", href: "/" },
+    { icon: Sparkles, label: "やりたいことに出会う", href: "/match" },
+    { icon: ListChecks, label: "やりたいことを選ぶ", href: "/pick" },
+    { icon: Rocket, label: "行動を起こす", href: "/action" },
+    { icon: Settings, label: "設定", href: "/settingspage" },
+    { icon: MessageCircle, label: "お問い合わせ", href: "/contact" },
+    { icon: LogOut, label: "ログアウト", onClick: handleLogout }
+  ]
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -41,10 +59,20 @@ export function Layout({ children }: LayoutProps) {
           <ul className="p-4">
             {menuItems.map((item, index) => (
               <li key={index} className="py-3">
-                <Link href={item.href} className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200">
-                  <item.icon className="h-5 w-5 mr-2" />
-                  <span>{item.label}</span>
-                </Link>
+                {item.href ? (
+                  <Link href={item.href} className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200">
+                    <item.icon className="h-5 w-5 mr-2" />
+                    <span>{item.label}</span>
+                  </Link>
+                ) : (
+                  <button
+                    onClick={item.onClick}
+                    className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200 w-full"
+                  >
+                    <item.icon className="h-5 w-5 mr-2" />
+                    <span>{item.label}</span>
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -57,10 +85,20 @@ export function Layout({ children }: LayoutProps) {
               <ul className="p-4">
                 {menuItems.map((item, index) => (
                   <li key={index} className="py-3">
-                    <Link href={item.href} className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200">
-                      <item.icon className="h-5 w-5 mr-2" />
-                      <span>{item.label}</span>
-                    </Link>
+                    {item.href ? (
+                      <Link href={item.href} className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200">
+                        <item.icon className="h-5 w-5 mr-2" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={item.onClick}
+                        className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200 w-full"
+                      >
+                        <item.icon className="h-5 w-5 mr-2" />
+                        <span>{item.label}</span>
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -72,6 +110,32 @@ export function Layout({ children }: LayoutProps) {
                 <X className="h-6 w-6" />
               </button>
             </nav>
+          </div>
+        )}
+
+        {/* ログアウト確認ポップアップ */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="w-full max-w-md bg-white shadow-xl rounded-xl overflow-hidden">
+              <div className="p-6 text-center">
+                <h2 className="text-3xl font-bold text-gray-800 mb-4">ログアウトの確認</h2>
+                <p className="text-xl text-gray-600 mb-6">本当にログアウトしますか？</p>
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={cancelLogout}
+                    className="px-6 py-2 border border-teal-500 text-teal-700 hover:bg-teal-50 rounded-md transition-colors duration-200"
+                  >
+                    いいえ
+                  </button>
+                  <button
+                    onClick={confirmLogout}
+                    className="px-6 py-2 bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white rounded-md transition-colors duration-200"
+                  >
+                    はい
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

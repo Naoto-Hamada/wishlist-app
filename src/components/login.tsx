@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Chrome } from 'lucide-react'
+import { FaGoogle } from 'react-icons/fa'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -108,9 +109,9 @@ export function Login() {
           <div className="mt-6">
             <Button
               type="button"
-              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="w-full bg-white text-gray-700 font-bold py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center"
             >
-              <Chrome className="w-5 h-5 mr-2" />
+              <FaGoogle className="mr-2" />
               Googleアカウントでログイン
             </Button>
           </div>

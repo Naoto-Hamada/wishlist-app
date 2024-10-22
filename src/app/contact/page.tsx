@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeComponent } from "@/components/home";
+import { ContactFormComponent } from "@/components/contact-form";
 import { Layout } from "@/components/layout";
 
-export default function Home() {
+export default function COntact() {
   return (
     <Layout>
-      <HomeComponent />
+      <ContactFormComponent />
     </Layout>
   );
 }

@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeComponent } from "@/components/home";
+import { WishlistMatching } from "@/components/pick";
 import { Layout } from "@/components/layout";
 
-export default function Home() {
+export default function PickPage() {
   return (
     <Layout>
-      <HomeComponent />
+      <WishlistMatching />
     </Layout>
   );
 }

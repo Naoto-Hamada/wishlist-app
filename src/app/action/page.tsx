@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeComponent } from "@/components/home";
+import { WishlistDetailComponent } from "@/components/wishlist-detail";
 import { Layout } from "@/components/layout";
 
-export default function Home() {
+export default function Action() {
   return (
     <Layout>
-      <HomeComponent />
+      <WishlistDetailComponent />
     </Layout>
   );
 }

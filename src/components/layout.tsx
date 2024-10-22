@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, useState } from "react"
-import { Menu, X, Home, Sparkles, ListChecks, Rocket, Settings, MessageCircle } from "lucide-react"
+import { Menu, X, Home, Sparkles, ListChecks, Rocket, Settings, MessageCircle, LogOut } from "lucide-react"
 import Link from 'next/link'
 
 const menuItems = [
@@ -10,7 +10,8 @@ const menuItems = [
   { icon: ListChecks, label: "やりたいことを選ぶ", href: "/pick" },
   { icon: Rocket, label: "行動を起こす", href: "/action" },
   { icon: Settings, label: "設定", href: "/settingspage" },
-  { icon: MessageCircle, label: "お問い合わせ", href: "/contact" }
+  { icon: MessageCircle, label: "お問い合わせ", href: "/contact" },
+  { icon: LogOut, label: "ログアウト", href: "/logout" }
 ]
 
 type LayoutProps = {

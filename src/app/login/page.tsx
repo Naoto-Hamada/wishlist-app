@@ -1,12 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeComponent } from "@/components/home";
-import { Layout } from "@/components/layout";
+import { Login } from "@/components/login";
 
-export default function Home() {
+export default function LoginPage() {
   return (
-    <Layout>
-      <HomeComponent />
-    </Layout>
-  );
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <Login />
+    </div>
+  )
 }

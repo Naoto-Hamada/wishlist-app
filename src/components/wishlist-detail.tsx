@@ -66,11 +66,11 @@ export function WishlistDetailComponent() {
   };
 
   const handleActionPlanChange = (index: number) => {
-    const newActionPlan = editedItem.actionPlan.map((step, i) =>
+    const newActionPlan = selectedItem.actionPlan.map((step, i) =>
       i === index ? { ...step, completed: !step.completed } : step
     );
+    setSelectedItem({ ...selectedItem, actionPlan: newActionPlan });
     setEditedItem({ ...editedItem, actionPlan: newActionPlan });
-    setIsEdited(true);
   };
 
   const handleEditSubmit = () => {

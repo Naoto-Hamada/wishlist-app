@@ -47,7 +47,9 @@ export function Layout({ children }: LayoutProps) {
     <div className="flex flex-col min-h-screen">
       {/* ヘッダー */}
       <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-teal-400 to-blue-500 p-4 text-white flex justify-between items-center z-20">
-        <h1 className="text-xl font-bold">Wish List</h1>
+        <Link href="/" className="text-xl font-bold hover:text-gray-200 transition-colors duration-200">
+          Wish List
+        </Link>
         <button onClick={toggleMenu} className="md:hidden text-white focus:outline-none" aria-label="メニューを開く">
           <Menu className="h-6 w-6" />
         </button>

@@ -9,7 +9,7 @@ const menuItems = [
   { icon: Sparkles, label: "やりたいことに出会う", href: "/match" },
   { icon: ListChecks, label: "やりたいことを選ぶ", href: "/pick" },
   { icon: Rocket, label: "行動を起こす", href: "/action" },
-  { icon: Settings, label: "設定", href: "/settings" },
+  { icon: Settings, label: "設定", href: "/settingspage" },
   { icon: MessageCircle, label: "お問い合わせ", href: "/contact" }
 ]
 

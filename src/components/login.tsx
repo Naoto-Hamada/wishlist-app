@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Chrome } from 'lucide-react'
 import { FaGoogle } from 'react-icons/fa'
+import { supabase } from '../utlis/supabase' // supabaseクライアントのインポート
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -28,6 +29,18 @@ export function Login() {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      })
+      if (error) throw error
+      console.log('Googleログイン成功')
+    } catch (error) {
+      setError('Googleログインに失敗しました。')
     }
   }
 
@@ -110,6 +123,7 @@ export function Login() {
             <Button
               type="button"
               className="w-full bg-white text-gray-700 font-bold py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center"
+              onClick={handleGoogleLogin}
             >
               <FaGoogle className="mr-2" />
               Googleアカウントでログイン

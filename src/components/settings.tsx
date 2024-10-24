@@ -20,6 +20,8 @@ const genres = [
   { category: "読書", items: ["小説", "ノンフィクション", "詩", "マンガ", "ビジネス書"] },
 ]
 
+type AuthProvider = 'email' | 'google' | 'both';
+
 export function Settings() {
   const [editing, setEditing] = useState<string | null>(null)
   const [email, setEmail] = useState('user@example.com')
@@ -33,6 +35,7 @@ export function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isChanged, setIsChanged] = useState(false)
   const [nickname, setNickname] = useState('ユーザー1')
+  const [authProvider, setAuthProvider] = useState<AuthProvider>('email')
 
   const handleEdit = (field: string) => {
     setEditing(editing === field ? null : field)
@@ -57,52 +60,64 @@ export function Settings() {
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-500">メールアドレス</Label>
               <div className="flex items-center space-x-2">
-                {editing === 'email' ? (
-                  <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-grow" />
-                ) : (
-                  <span className="text-lg">{email}</span>
+                <span className="text-lg">{email}</span>
+                {authProvider !== 'email' && (
+                  <span className="text-sm text-gray-500">
+                    ({authProvider === 'both' ? 'メール/パスワードとGoogle認証' : 'Google認証'})
+                  </span>
                 )}
-                <Button variant="ghost" size="icon" onClick={() => handleEdit('email')}>
-                  {editing === 'email' ? <Check className="h-4 w-4" /> : <Pen className="h-4 w-4" />}
-                </Button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-500">パスワード</Label>
-              <div className="flex items-center space-x-2">
-                {editing === 'password' ? (
-                  <div className="space-y-2 w-full">
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      placeholder="現在のパスワード"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      placeholder="新しいパスワード"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="新しいパスワード（確認）"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                  </div>
-                ) : (
-                  <span className="text-lg">********</span>
-                )}
-                <Button variant="ghost" size="icon" onClick={() => handleEdit('password')}>
-                  {editing === 'password' ? <Check className="h-4 w-4" /> : <Pen className="h-4 w-4" />}
-                </Button>
+            {authProvider !== 'google' && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-500">パスワード</Label>
+                <div className="flex items-center space-x-2">
+                  {editing === 'password' ? (
+                    <div className="space-y-2 w-full">
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        placeholder="現在のパスワード"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        placeholder="新しいパスワード"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="新しいパスワード（確認）"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-lg">********</span>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit('password')}>
+                    {editing === 'password' ? <Check className="h-4 w-4" /> : <Pen className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {authProvider === 'both' && (
+              <div className="text-sm text-gray-500 mt-2">
+                注意：このアカウントはメール/パスワードとGoogle認証の両方で利用可能です。
+              </div>
+            )}
+
+            {authProvider === 'google' && (
+              <div className="text-sm text-gray-500 mt-2">
+                Google認証を使用しているため、パスワードは設定されていません。
+              </div>
+            )}
           </div>
 
           <Separator />

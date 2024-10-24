@@ -32,6 +32,7 @@ export function Settings() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isChanged, setIsChanged] = useState(false)
+  const [nickname, setNickname] = useState('ユーザー1')
 
   const handleEdit = (field: string) => {
     setEditing(editing === field ? null : field)
@@ -109,6 +110,20 @@ export function Settings() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">プロフィール情報（任意）</h3>
             <p className="text-sm text-gray-500">以下の情報を入力すると、より精度の高いおすすめを提供できます。</p>
+
+            <div className="space-y-2">
+              <Label htmlFor="nickname" className="text-sm font-medium text-gray-500">ニックネーム</Label>
+              <div className="flex items-center space-x-2">
+                {editing === 'nickname' ? (
+                  <Input id="nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} className="flex-grow" />
+                ) : (
+                  <span className="text-lg">{nickname}</span>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => handleEdit('nickname')}>
+                  {editing === 'nickname' ? <Check className="h-4 w-4" /> : <Pen className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="age" className="text-sm font-medium text-gray-500">年齢</Label>

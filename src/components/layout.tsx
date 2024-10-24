@@ -1,12 +1,12 @@
 'use client'
 
-import { ReactNode, useState } from "react"
+import { ReactNode, useState, useEffect } from "react"
 import { Menu, X, Home, Sparkles, ListChecks, Rocket, Settings, MessageCircle, LogOut } from "lucide-react"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Card, CardContent, Button } from '@mui/material'
 import { useSupabase } from '../utils/supabase'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
+import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react'
 
 type LayoutProps = {
   children: ReactNode
@@ -15,8 +15,18 @@ type LayoutProps = {
 export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [nickname, setNickname] = useState("")
   const pathname = usePathname()
   const supabase = useSupabase()
+  const session = useSession()
+
+  useEffect(() => {
+    if (session?.user) {
+      // ニックネームを取得する処理を追加
+      // 例: setNickname(session.user.user_metadata.nickname)
+      setNickname("ユーザー") // 仮のニックネーム
+    }
+  }, [session])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -54,9 +64,14 @@ export function Layout({ children }: LayoutProps) {
           <Link href="/" className="text-xl font-bold hover:text-gray-200 transition-colors duration-200">
             Wish List
           </Link>
-          <button onClick={toggleMenu} className="md:hidden text-white focus:outline-none" aria-label="メニューを開く">
-            <Menu className="h-6 w-6" />
-          </button>
+          <div className="flex items-center">
+            <Link href="/settingspage" className="mr-4 hover:text-gray-200 transition-colors duration-200">
+              {nickname}
+            </Link>
+            <button onClick={toggleMenu} className="md:hidden text-white focus:outline-none" aria-label="メニューを開く">
+              <Menu className="h-6 w-6" />
+            </button>
+          </div>
         </header>
 
         <div className="flex flex-grow pt-16">
@@ -66,7 +81,14 @@ export function Layout({ children }: LayoutProps) {
               {menuItems.map((item, index) => (
                 <li key={index} className="py-3">
                   {item.href ? (
-                    <Link href={item.href} className="flex items-center text-gray-700 hover:text-teal-500 transition-colors duration-200">
+                    <Link 
+                      href={item.href} 
+                      className={`flex items-center transition-colors duration-200 ${
+                        pathname === item.href 
+                          ? "text-teal-500 font-bold" 
+                          : "text-gray-700 hover:text-teal-500"
+                      }`}
+                    >
                       <item.icon className="h-5 w-5 mr-2" />
                       <span>{item.label}</span>
                     </Link>
@@ -88,6 +110,11 @@ export function Layout({ children }: LayoutProps) {
           {isMenuOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden">
               <nav className="bg-white w-64 h-full absolute right-0 shadow-lg pt-16">
+                <div className="p-4 border-b border-gray-200">
+                  <Link href="/settingspage" className="text-gray-700 hover:text-teal-500 transition-colors duration-200">
+                    {nickname}
+                  </Link>
+                </div>
                 <ul className="p-4">
                   {menuItems.map((item, index) => (
                     <li key={index} className="py-3">

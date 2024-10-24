@@ -31,12 +31,6 @@ export interface UserProfile {
     mail_adress: string;
 }
 
-export interface UserGenre {
-    user_id: string;
-    created_at: string;
-    genre_id: string;
-}
-
 export interface Genre {
     genre_id: string;
     name: string;
@@ -53,4 +47,49 @@ export interface Country {
     code: string;
     created_at: string;
     updated_at: string;
+}
+
+export interface WishBase {
+    base_wish_id: string;
+    title: string;
+    detail: string;
+    duration: string;
+    cost: number;
+    created_at: string;
+    updated_at: string;
+    basewish_image_url: string;
+}
+
+export interface WishCustom {
+    user_id: string;
+    title: string;
+    detail: string;
+    duration: number;
+    cost: string;
+    created_at: string;
+    updated_at: string;
+    custom_wish_id: string;
+    base_wish_id: string;
+    customwish_image_url: string;
+}
+
+
+//中間テーブル
+export interface User_Genre {
+    user_id: string;
+    created_at: string;
+    genre_id: string;
+}
+
+export interface User_CustomWish {
+    user_id: string;
+    created_at: string;
+    custom_wish_id: string;
+}
+
+export interface Genre_BaseWish {
+  genre_wish_id: string;
+  genre_id: string;
+  basewish_id: string;
+  added_at: string;
 }

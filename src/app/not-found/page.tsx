@@ -3,12 +3,12 @@
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 
-const Login = dynamic(() => import('@/components/login'), { ssr: false })
+const NotFoundComponent = dynamic(() => import('@/components/NotFound'), { ssr: false })
 
-export default function LoginPage() {
+export default function NotFoundPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Login />
+      <NotFoundComponent />
     </Suspense>
   )
 }

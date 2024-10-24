@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from 'lucide-react'
 import { FaGoogle } from 'react-icons/fa'
-import { useSupabase } from '@/utils/supabase' // useSupabaseフックをインポート
+import { useSupabase } from '@/utils/supabase'
+import { useRouter } from 'next/navigation'
 
-export function Login() {
+const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const supabase = useSupabase() // useSupabaseフックを使用
+  const supabase = useSupabase()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,12 +24,18 @@ export function Login() {
     setError('')
 
     try {
-      // ここにログイン処理を実装
-      // const result = await loginUser(email, password)
-      // ログイン成功時の処理
-      console.log('ログイン成功')
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      })
+
+      if (error) throw error
+
+      console.log('ログイン成功', data)
+      router.push('/')
     } catch (error) {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。')
+      console.error('ログインエラー:', error.message)
     } finally {
       setIsLoading(false)
     }
@@ -151,3 +159,5 @@ export function Login() {
     </div>
   )
 }
+
+export default Login

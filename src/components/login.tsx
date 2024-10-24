@@ -5,15 +5,16 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, Chrome } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { FaGoogle } from 'react-icons/fa'
-import { supabase } from '../utlis/supabase' // supabaseクライアントのインポート
+import { useSupabase } from '@/utils/supabase' // useSupabaseフックをインポート
 
 export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const supabase = useSupabase() // useSupabaseフックを使用
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +42,7 @@ export function Login() {
       console.log('Googleログイン成功')
     } catch (error) {
       setError('Googleログインに失敗しました。')
+      console.error('サインインエラー:', error.message)
     }
   }
 

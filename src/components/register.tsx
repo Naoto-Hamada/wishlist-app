@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FaGoogle } from 'react-icons/fa'
+import { useSupabase } from '@/utils/supabase'
 
 const usePasswordStrength = (password: string) => {
   const [strength, setStrength] = useState(0)
@@ -31,6 +32,10 @@ export function Register() {
   const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState('')
   const passwordStrength = usePasswordStrength(password)
+  const supabase = useSupabase()
+  const [isLoading, setIsLoading] = useState(false)
+  const [signUpError, setSignUpError] = useState('')
+  const [signUpSuccess, setSignUpSuccess] = useState(false)
 
   const validateEmail = (email: string) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -48,54 +53,101 @@ export function Register() {
 
   const isFormValid = email && password && !emailError
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setSignUpError('')
+    const { error } = await supabase.auth.signUp({ email, password })
+    if (error) {
+      console.error('サインアップエラー:', error.message)
+      setSignUpError(error.message)
+    } else {
+      console.log('サインアップ成功')
+      setSignUpSuccess(true)
+    }
+    setIsLoading(false)
+  }
+
+  const handleGoogleSignIn = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    })
+    if (error) {
+      console.error('Googleサインインエラー:', error.message)
+    } else {
+      console.log('Googleサインイン成功:', data)
+      // ここでユーザーをリダイレクトするなどの処理を行う
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F3F4F6]">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">アカウント登録</h2>
-        <form className="space-y-4">
-          <div>
-            <Label htmlFor="email">メールアドレス</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="example@example.com"
-              value={email}
-              onChange={handleEmailChange}
-              className="w-full mt-1"
-            />
-            {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
-          </div>
-          <div>
-            <Label htmlFor="password">パスワード</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="********"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full mt-1"
-            />
-            <div className="mt-2">
-              <div className="text-sm text-gray-600">パスワード強度:</div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${(passwordStrength / 4) * 100}%` }}
-                ></div>
+        {signUpSuccess ? (
+          <Alert className="mb-4 bg-green-50 border-green-200">
+            <AlertDescription>
+              登録が完了しました。確認メールをご確認ください。
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <form className="space-y-4" onSubmit={handleSignUp}>
+            <div>
+              <Label htmlFor="email">メールアドレス</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="example@example.com"
+                value={email}
+                onChange={handleEmailChange}
+                className="w-full mt-1"
+              />
+              {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
+            </div>
+            <div>
+              <Label htmlFor="password">パスワード</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full mt-1"
+              />
+              <div className="mt-2">
+                <div className="text-sm text-gray-600">パスワード強度:</div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${(passwordStrength / 4) * 100}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-bold py-2 px-4 rounded"
-            disabled={!isFormValid}
-          >
-            アカウント作成
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-bold py-2 px-4 rounded"
+              disabled={!isFormValid || isLoading}
+            >
+              {isLoading ? '処理中...' : 'アカウント作成'}
+            </Button>
+            {signUpError && (
+              <Alert className="mt-4 bg-red-50 border-red-200">
+                <AlertDescription>{signUpError}</AlertDescription>
+              </Alert>
+            )}
+          </form>
+        )}
         <div className="mt-4">
           <Button
             type="button"
+            onClick={handleGoogleSignIn}
             className="w-full bg-white text-gray-700 font-bold py-2 px-4 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center"
           >
             <FaGoogle className="mr-2" />

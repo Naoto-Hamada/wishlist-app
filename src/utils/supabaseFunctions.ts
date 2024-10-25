@@ -141,3 +141,45 @@ export async function createCustomWish(baseWish: WishBase, userId: string, statu
     return { data: null, error };
   }
 }
+
+export async function getUnratedBaseWishes(userId: string) {
+  try {
+    // まず、ユーザーの評価済みウィッシュのIDを取得
+    const { data: ratedWishes, error: ratedError } = await supabase
+      .from('WishCustom')
+      .select('base_wish_id')
+      .eq('user_id', userId);
+    
+    // デバッグログを追加
+    console.log('評価済みウィッシュ:', ratedWishes);
+    console.log('評価済みウィッシュエラー:', ratedError);
+
+    if (ratedError) throw ratedError;
+    
+    // 評価済みのbase_wish_idの配列を作成
+    const ratedWishIds = ratedWishes ? ratedWishes.map(wish => wish.base_wish_id) : [];
+    
+    // 全ベースウィッシュを取得
+    const { data: allWishes, error: wishError } = await supabase
+      .from('WishBase')
+      .select('*');
+
+    // デバッグログを追加
+    console.log('全ベースウィッシュ:', allWishes);
+    console.log('ベースウィッシュエラー:', wishError);
+
+    if (wishError) throw wishError;
+
+    // JavaScriptでフィルタリング
+    const unratedWishes = allWishes.filter(
+      wish => !ratedWishIds.includes(wish.base_wish_id)
+    );
+
+    console.log('フィルタ後のウィッシュ:', unratedWishes.length);
+
+    return { data: unratedWishes, error: null };
+  } catch (error) {
+    console.error('未評価ベースウィッシュ取得エラー:', error);
+    return { data: null, error };
+  }
+}

@@ -6,7 +6,7 @@ import { useSpring, animated } from '@react-spring/web'
 import { ThumbsUp, ThumbsDown, Check, ChevronLeft, ChevronDown, ChevronRight, Info } from 'lucide-react'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { WishBase } from '@/utils/interface'
-import { getBaseWishes, createCustomWish, getCurrentUser } from '@/utils/supabaseFunctions'
+import { getUnratedBaseWishes, createCustomWish, getCurrentUser } from '@/utils/supabaseFunctions'
 
 export function WishlistMatchingComponent() {
   const [wishes, setWishes] = useState<WishBase[]>([])
@@ -89,16 +89,30 @@ export function WishlistMatchingComponent() {
 
   useEffect(() => {
     async function fetchWishes() {
-      const { data, error } = await getBaseWishes()
+      if (!user) return;
+      
+      // デバッグログを追加
+      console.log('Fetching wishes for user:', user.id);
+      
+      const { data, error } = await getUnratedBaseWishes(user.id);
+      
+      // データとエラーの詳細をログ出力
+      console.log('Fetched data:', data);
+      console.log('Error if any:', error);
+      
       if (data) {
-        setWishes(data)
+        setWishes(data);
+        console.log('Total wishes found:', data.length);
       } else {
-        console.error('ウィッシュの取得に失敗しました:', error)
+        console.error('未評価ウィッシュの取得に失敗しました:', error);
       }
-      setLoading(false)
+      setLoading(false);
     }
-    fetchWishes()
-  }, [])
+
+    if (user) {
+      fetchWishes();
+    }
+  }, [user]);
 
   const currentItem = wishes[currentIndex]
   const nextItem = wishes[(currentIndex + 1) % wishes.length]

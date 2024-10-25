@@ -13,7 +13,7 @@ export function WishlistMatchingComponent() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState<'left' | 'down' | 'right' | null>(null)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(null) // userを状態として管理
   const [history, setHistory] = useState<{
     wish: WishBase;
     status: string;
@@ -28,13 +28,22 @@ export function WishlistMatchingComponent() {
     config: { tension: 280, friction: 60 },
   }))
 
+  const [showCustomWishForm, setShowCustomWishForm] = useState(false);
+  const [customWish, setCustomWish] = useState({
+    title: '',
+    detail: '',
+    duration: '', // テキスト型に変更
+    cost: '',
+  });
+
   useEffect(() => {
     async function fetchUser() {
-      const { user } = await getCurrentUser()
-      setUser(user)
+      const { user } = await getCurrentUser();
+      console.log('Fetched user:', user); // デバッグ用ログ
+      setUser(user);
     }
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
   const handleSwipe = async (dir: 'left' | 'down' | 'right') => {
     // アニメーション前に現在の状態を履歴に保存
@@ -164,7 +173,62 @@ export function WishlistMatchingComponent() {
   }
 
   if (wishes.length === 0) {
-    return <div>ウィッシュが見つかりませんでした</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-2xl font-bold text-gray-700 mb-2">おめでとうございます🎉</h2>
+        <h3 className="text-xl text-gray-700 mb-4">全部振り分けできましたね！</h3>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              className="px-4 py-2 bg-gradient-to-r from-teal-400 to-blue-500 text-white rounded-lg shadow-md hover:from-teal-500 hover:to-blue-600"
+            >
+              自分でやりたいことを作成する
+            </button>
+          </DialogTrigger>
+          <DialogContent className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">やりたいことを入力しよう！</h3>
+            <form onSubmit={handleCustomWishSubmit} className="space-y-4 w-full max-w-md">
+              <input
+                type="text"
+                placeholder="タイトル"
+                value={customWish.title}
+                onChange={(e) => setCustomWish({ ...customWish, title: e.target.value })}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <textarea
+                placeholder="詳細"
+                value={customWish.detail}
+                onChange={(e) => setCustomWish({ ...customWish, detail: e.target.value })}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                placeholder="所要時間"
+                value={customWish.duration}
+                onChange={(e) => setCustomWish({ ...customWish, duration: e.target.value })}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="number"
+                placeholder="予算"
+                value={customWish.cost}
+                onChange={(e) => setCustomWish({ ...customWish, cost: e.target.value })}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <div className="text-center">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-gradient-to-r from-teal-400 to-blue-500 text-white rounded-lg shadow-md hover:from-teal-500 hover:to-blue-600"
+                >
+                  作成
+                </button>
+                <p className="text-sm text-gray-500 mt-2">※あとで編集できます</p>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
   }
 
   return (
@@ -301,3 +365,23 @@ function Card({ item }: { item: WishBase }) {
     </div>
   )
 }
+
+const handleCustomWishSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log('User in handleCustomWishSubmit:', user); // デバッグ用ログ
+  if (user) {
+    const { error } = await createCustomWish({
+      ...customWish,
+      original_flag: 'original',
+    }, user.user_id); // user_idを使用
+    if (error) {
+      console.error('カスタムウィッシュの作成に失敗しました:', error);
+    } else {
+      console.log('カスタムウィッシュが正常に作成されました');
+      setShowCustomWishForm(false);
+      setCustomWish({ title: '', detail: '', duration: '', cost: '' });
+    }
+  } else {
+    console.warn('ユーザーが見つかりません');
+  }
+};

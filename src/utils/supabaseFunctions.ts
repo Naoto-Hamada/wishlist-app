@@ -41,7 +41,7 @@ export function useSupabase() {
   return supabase
 }
 
-// Settingsにuserprofileを表示するため、userprofileDBからデータ��取得する関数
+// Settingsにuserprofileを表示するため、userprofileDBからデータ取得する関数
 
 export async function getUserProfile(userId: string): Promise<userprofile | null> {
   try {
@@ -234,6 +234,25 @@ export async function updateWishStatus(userId: string, baseWishId: string | null
     return { data, error: null };
   } catch (error) {
     console.error('ステータス更新エラー:', error);
+    return { data: null, error };
+  }
+}
+
+export async function updateCustomWish(customWishId: string, updates: Partial<WishCustom>) {
+  try {
+    const { data, error } = await supabase
+      .from('WishCustom')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('custom_wish_id', customWishId)
+      .select();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('カスタムウィッシュ更新エラー:', error);
     return { data: null, error };
   }
 }

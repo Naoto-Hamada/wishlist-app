@@ -101,12 +101,7 @@ export function WishlistMatching() {
           <h1 className="text-3xl font-bold mb-6 text-center text-primary">
             大切なものに集中 👀
           </h1>
-          
-          {/* デバッグ情報 */}
-          <div className="mb-4 text-sm text-gray-500">
-            <p>選択済み: {selectedItems.length}/5</p>
-            <p>残り: {remainingItems.length}</p>
-          </div>
+        
 
           <ItemsArea items={selectedItems} isSelected={true} onMove={moveItem} />
           <ItemsArea items={remainingItems} isSelected={false} onMove={moveItem} />

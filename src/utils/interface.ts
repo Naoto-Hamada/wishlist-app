@@ -54,6 +54,7 @@ export interface WishCustom {
     custom_wish_id: string;
     user_id: string;
     status: string;
+    original_flag: string;
 }
 
 

@@ -36,14 +36,22 @@ export function WishlistMatchingComponent() {
     cost: '',
   });
 
+  // 1. ユーザー情報取得時のログ
   useEffect(() => {
     async function fetchUser() {
       const { user } = await getCurrentUser();
-      console.log('Fetched user:', user); // デバッグ用ログ
+      console.log('=== ユーザー情報取得 ===');  // 区切り線を追加
+      console.log('取得したユーザー:', user);
       setUser(user);
     }
     fetchUser();
   }, []);
+
+  // 2. コンポーネントマウント時のログ
+  useEffect(() => {
+    console.log('=== コンポーネントマウント ===');  // 区切り線を追加
+    console.log('現在のユーザー状態:', user);
+  }, [user]);
 
   const handleSwipe = async (dir: 'left' | 'down' | 'right') => {
     // アニメーション前に現在の状態を履歴に保存
@@ -175,6 +183,44 @@ export function WishlistMatchingComponent() {
 
   const currentItem = wishes[currentIndex]
   const nextItem = wishes[(currentIndex + 1) % wishes.length]
+
+  // handleCustomWishSubmitをコンポーネント内に移動
+  const handleCustomWishSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    console.log('=== フォーム送信 ===');
+    console.log('送信時のユーザー状態:', user);
+    console.log('フォームデータ:', customWish);
+    
+    if (!user) {
+      console.error('ユーザーが見つかりません');
+      return;
+    }
+    
+    const customWishData: Partial<WishCustom> = {
+      title: customWish.title,
+      detail: customWish.detail,
+      duration: customWish.duration,
+      cost: Number(customWish.cost),
+      base_wish_id: null,
+      customwish_image_url: null,
+      user_id: user.id,
+      status: 'やりたい',
+      original_flag: 'original_flag'
+    };
+    
+    console.log('送信データ:', customWishData);
+
+    const { error } = await createCustomWish(customWishData);
+    
+    if (error) {
+      console.error('カスタムウィッシュの作成に失敗しました:', error);
+    } else {
+      console.log('カスタムウィッシュが正常に作成されました');
+      setShowCustomWishForm(false);
+      setCustomWish({ title: '', detail: '', duration: '', cost: '' });
+    }
+  };
 
   if (loading) {
     return <div>読み込み中...</div>
@@ -373,24 +419,3 @@ function Card({ item }: { item: WishBase }) {
     </div>
   )
 }
-
-const handleCustomWishSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  console.log('User in handleCustomWishSubmit:', user); // デバッグ用ログ
-  if (user) {
-    const { error } = await createCustomWish({
-      ...customWish,
-      original_flag: 'original',
-    }, user.user_id); // user_idを使用
-    if (error) {
-      console.error('カスタムウィッシュの作成に失敗しました:', error);
-    } else {
-      console.log('カスタムウィッシュが正常に作成されました');
-      setShowCustomWishForm(false);
-      setCustomWish({ title: '', detail: '', duration: '', cost: '' });
-    }
-  } else {
-    console.warn('ユーザーが見つかりません');
-  }
-};
-

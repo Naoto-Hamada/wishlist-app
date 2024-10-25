@@ -112,27 +112,22 @@ export async function getBaseWishes() {
   }
 }
 
-export async function createCustomWish(baseWish: WishBase, userId: string, status: string) {
+export async function createCustomWish(customWishData: Partial<WishCustom>) {
   try {
-    const customWish = {
-      base_wish_id: baseWish.base_wish_id,
-      title: baseWish.title,
-      detail: baseWish.detail,
-      duration: baseWish.duration, // テキストとしてそのまま保存
-      cost: baseWish.cost,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      customwish_image_url: baseWish.basewish_image_url,
-      user_id: userId,
-      status: status
-    };
-
-    console.log('Prepared custom wish object:', customWish);
+    // デバッグログを追加
+    console.log('Supabaseに送信するデータ:', customWishData);
 
     const { data, error } = await supabase
       .from('WishCustom')
-      .insert(customWish)
+      .insert({
+        ...customWishData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .select();
+
+    // レスポンスのログ
+    console.log('Supabaseのレスポンス:', { data, error });
 
     if (error) throw error;
     return { data, error: null };

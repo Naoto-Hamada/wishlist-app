@@ -1,9 +1,3 @@
-export interface User {
-    id: string;
-    created_at: string;
-    updated_at: string;
-}
-
 export interface UserAuth {
     user_id: string;
     auth_type: string;
@@ -17,7 +11,7 @@ export interface UserAuth {
     updated_at: string;
 }
 
-export interface UserProfile {
+export interface userprofile {
     user_id: string;
     nickname: string;
     age: number;

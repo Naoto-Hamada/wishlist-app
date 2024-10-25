@@ -1,59 +1,78 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Edit, Clock, DollarSign } from 'lucide-react'
+import { Edit, Clock, DollarSign, Sparkles, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { getCurrentUser, getWishesByStatus, updateCustomWish } from '@/utils/supabaseFunctions'
+import ReactMarkdown from 'react-markdown'
+import { WishCustom } from '@/utils/interface'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { ja } from "date-fns/locale" // 日本語ローカライズ
 
 interface WishlistItem {
-  id: number
-  title: string
-  image: string
-  duration: string
-  cost: string
-  description: string
-  actionPlan: { task: string; completed: boolean }[]
+  id: string;
+  title: string;
+  image: string;
+  duration: string;
+  cost: number;
+  description: string;
+  goal: string;
+  actionPlan: string; // 文字列型に変更
 }
 
-const wishlistItems: WishlistItem[] = [
-  { id: 1, title: '富士山に登る', image: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=500&h=500&fit=crop', duration: '2日間', cost: '¥30,000', description: '日本の象徴である富士山に登り、ご来光を見る', actionPlan: [
-    { task: '装備を準備する', completed: false },
-    { task: 'ガイドを予約する', completed: false },
-    { task: '体力トレーニングを行う', completed: false }
-  ] },
-  { id: 2, title: 'パリを訪れる', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&h=500&fit=crop', duration: '1週間', cost: '¥300,000', description: 'エッフェル塔やルーブル美術館など、パリの名所を巡る', actionPlan: [
-    { task: 'パスポートを更新する', completed: false },
-    { task: 'フランス語の基礎を学ぶ', completed: false },
-    { task: '航空券とホテルを予約する', completed: false }
-  ] },
-  { id: 3, title: 'マラソンに参加', image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=500&h=500&fit=crop', duration: '6ヶ月', cost: '¥50,000', description: 'フルマラソンを完走する', actionPlan: [
-    { task: 'ランニングシューズを購入する', completed: false },
-    { task: 'トレーニングスケジュールを立てる', completed: false },
-    { task: '地元のマラソン大会に申し込む', completed: false }
-  ] },
-  { id: 4, title: 'ピアノを弾けるようになる', image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=500&h=500&fit=crop', duration: '1年', cost: '¥200,000', description: 'ベートーベンの月光ソナタを弾けるようになる', actionPlan: [
-    { task: 'ピアノ教室に通う', completed: false },
-    { task: '毎日30分の練習時間を確保する', completed: false },
-    { task: '電子ピアノを購入する', completed: false }
-  ] },
-  { id: 5, title: 'ヨガインストラクターになる', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&h=500&fit=crop', duration: '2年', cost: '¥500,000', description: 'ヨガの資格を取得し、クラスを開講する', actionPlan: [
-    { task: 'ヨガスタジオに通う', completed: false },
-    { task: 'インストラクター養成講座に参加する', completed: false },
-    { task: '解剖学を学ぶ', completed: false }
-  ] },
-]
-
 export function WishlistDetailComponent() {
-  const [selectedItem, setSelectedItem] = useState<WishlistItem>(wishlistItems[0])
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
+  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [editedItem, setEditedItem] = useState<WishlistItem>(selectedItem)
+  const [editedItem, setEditedItem] = useState<WishlistItem | null>(null)
   const [isEdited, setIsEdited] = useState(false);
+  const [isAchievedDialogOpen, setIsAchievedDialogOpen] = useState(false)
+  const [achievementDate, setAchievementDate] = useState<Date>()
+  const [thoughts, setThoughts] = useState("")
+
+  useEffect(() => {
+    async function fetchWishlistItems() {
+      const { user } = await getCurrentUser()
+      if (!user) return
+
+      const { data, error } = await getWishesByStatus(user.id, '直近やりたい')
+      if (error) {
+        console.error('ウィッシュリストの取得に失敗しました:', error)
+        return
+      }
+
+      // データを変換
+      const formattedData = data.map(item => ({
+        id: item.custom_wish_id,
+        title: item.title,
+        image: item.customwish_image_url,
+        duration: item.duration,
+        cost: item.cost,
+        description: item.detail,
+        goal: item.goal,
+        actionPlan: item.action
+      }))
+
+      setWishlistItems(formattedData)
+      if (formattedData.length > 0) {
+        setSelectedItem(formattedData[0])
+        setEditedItem(formattedData[0])
+      }
+    }
+
+    fetchWishlistItems()
+  }, [])
 
   const handleItemClick = (item: WishlistItem) => {
     setSelectedItem(item)
@@ -65,18 +84,100 @@ export function WishlistDetailComponent() {
     setIsEdited(true);
   };
 
-  const handleActionPlanChange = (index: number) => {
+  const handleActionPlanChange = async (index: number) => {
+    if (!selectedItem || !editedItem) return
+
     const newActionPlan = selectedItem.actionPlan.map((step, i) =>
       i === index ? { ...step, completed: !step.completed } : step
-    );
-    setSelectedItem({ ...selectedItem, actionPlan: newActionPlan });
-    setEditedItem({ ...editedItem, actionPlan: newActionPlan });
+    )
+
+    // Supabaseに保存（型を明示的に指定）
+    const { error } = await updateCustomWish(selectedItem.id, {
+      action: JSON.stringify(newActionPlan)
+    } as Partial<WishCustom>)
+
+    if (error) {
+      console.error('アクションプランの更新に失敗しました:', error)
+      return
+    }
+
+    setSelectedItem({ ...selectedItem, actionPlan: newActionPlan })
+    setEditedItem({ ...editedItem, actionPlan: newActionPlan })
   };
 
-  const handleEditSubmit = () => {
-    setSelectedItem(editedItem);
-    setIsEditing(false);
-    setIsEdited(false);
+  const handleEditSubmit = async () => {
+    if (!editedItem) return
+
+    const { error } = await updateCustomWish(editedItem.id, {
+      title: editedItem.title,
+      detail: editedItem.description,
+      duration: editedItem.duration,
+      cost: Number(editedItem.cost),
+      goal: editedItem.goal,
+      action: editedItem.actionPlan, // 直接文字列として保存
+      updated_at: new Date().toISOString()
+    })
+
+    if (error) {
+      console.error('編集の保存に失敗しました:', error)
+      return
+    }
+
+    setSelectedItem(editedItem)
+    setIsEditing(false)
+    setIsEdited(false)
+
+    // 更新後にデータを再取得
+    const { user } = await getCurrentUser()
+    if (user) {
+      const { data } = await getWishesByStatus(user.id, '直近やりたい')
+      if (data) {
+        const formattedData = data.map(item => ({
+          id: item.custom_wish_id,
+          title: item.title,
+          image: item.customwish_image_url,
+          duration: item.duration,
+          cost: item.cost,
+          description: item.detail,
+          goal: item.goal,
+          actionPlan: item.action
+        }))
+        setWishlistItems(formattedData)
+      }
+    }
+  };
+
+  const handleAchievementSubmit = async () => {
+    if (!selectedItem || !achievementDate || !thoughts) return;
+
+    const formattedDate = format(achievementDate, 'yyyy-MM-dd');
+
+    const { error } = await updateCustomWish(selectedItem.id, {
+      status: 'やったことある',
+      achievement_date: formattedDate,
+      thoughts: thoughts,
+      updated_at: new Date().toISOString()
+    });
+
+    if (error) {
+      console.error('達成報告の保存に失敗しました:', error);
+      return;
+    }
+
+    // 状態をリセット
+    setIsAchievedDialogOpen(false);
+    setAchievementDate(undefined);
+    setThoughts("");
+
+    // 必要に応じてデータを再取得
+    const { user } = await getCurrentUser();
+    if (user) {
+      const { data } = await getWishesByStatus(user.id, 'やったことある');
+      if (data) {
+        // データの更新処理
+        // ...
+      }
+    }
   };
 
   return (
@@ -88,7 +189,7 @@ export function WishlistDetailComponent() {
               key={item.id}
               onClick={() => handleItemClick(item)}
               className={`flex-shrink-0 focus:outline-none ${
-                selectedItem.id === item.id ? 'ring-2 ring-teal-500' : ''
+                selectedItem?.id === item.id ? 'ring-2 ring-teal-500' : ''
               }`}
             >
               <Image
@@ -104,93 +205,18 @@ export function WishlistDetailComponent() {
       </div>
 
       <Card className="bg-white">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
-          <CardTitle className="text-xl sm:text-2xl font-bold break-words">{selectedItem.title}</CardTitle>
-          <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-white">
-              <DialogHeader>
-                <DialogTitle className="text-2xl mb-4">やりたいことを編集</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-6 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="title" className="text-right font-semibold">
-                    タイトル
-                  </Label>
-                  <Input
-                    id="title"
-                    value={editedItem.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="duration" className="text-right font-semibold">
-                    所要時間
-                  </Label>
-                  <Input
-                    id="duration"
-                    value={editedItem.duration}
-                    onChange={(e) => handleInputChange('duration', e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="cost" className="text-right font-semibold">
-                    費用
-                  </Label>
-                  <Input
-                    id="cost"
-                    value={editedItem.cost}
-                    onChange={(e) => handleInputChange('cost', e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="description" className="text-right font-semibold mt-2">
-                    説明
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={editedItem.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    className="col-span-3 min-h-[100px]"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="actionPlan" className="text-right font-semibold mt-2">
-                    アクションプラン
-                  </Label>
-                  <Textarea
-                    id="actionPlan"
-                    value={editedItem.actionPlan.map((step) => step.task).join('\n')}
-                    onChange={(e) => handleActionPlanChange(e.target.value)}
-                    className="col-span-3 min-h-[150px]"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  onClick={handleEditSubmit}
-                  className={`w-full mt-4 ${isEdited ? 'bg-teal-500 hover:bg-teal-600' : 'bg-gray-300 cursor-not-allowed'}`}
-                  disabled={!isEdited}
-                >
-                  保存
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+        <CardHeader className="flex flex-col space-y-2">
+          <div className="flex-1">
+            <CardTitle className="text-xl sm:text-2xl font-bold break-words">{selectedItem?.title}</CardTitle>
+            <p className="text-sm text-gray-600 mt-2 break-words">{selectedItem?.description}</p>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="aspect-w-4 aspect-h-5 relative h-[300px] md:h-[400px]">
+            <div className="aspect-w-16 aspect-h-10 relative h-[200px] md:h-[400px]">
               <Image
-                src={selectedItem.image}
-                alt={selectedItem.title}
+                src={selectedItem?.image}
+                alt={selectedItem?.title}
                 layout="fill"
                 objectFit="cover"
                 className="rounded-lg"
@@ -200,34 +226,225 @@ export function WishlistDetailComponent() {
               <div className="flex flex-wrap items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Clock className="h-5 w-5 text-gray-500" />
-                  <span className="break-words">{selectedItem.duration}</span>
+                  <span className="break-words">{selectedItem?.duration}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <DollarSign className="h-5 w-5 text-gray-500" />
-                  <span className="break-words">{selectedItem.cost}</span>
+                  <span className="break-words">{selectedItem?.cost}</span>
                 </div>
               </div>
-              <p className="text-gray-700 break-words">{selectedItem.description}</p>
+
+              {/* ボタングループ */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="default" 
+                  className="flex items-center gap-2 bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600"
+                  onClick={() => {/* AIで具体化する処理 */}}
+                >
+                  <Sparkles className="h-4 w-4 text-white" />
+                  <span className="text-white">AIで具体化</span>
+                </Button>
+                <Dialog open={isEditing} onOpenChange={setIsEditing}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Edit className="h-4 w-4" />
+                      <span>編集する</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white p-6">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+                        やりたいことを編集
+                      </DialogTitle>
+                    </DialogHeader>
+                    
+                    <div className="grid gap-6 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title" className="text-sm font-semibold text-gray-700">
+                          タイトル
+                        </Label>
+                        <Input
+                          id="title"
+                          value={editedItem?.title}
+                          onChange={(e) => handleInputChange('title', e.target.value)}
+                          className="w-full border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg"
+                          placeholder="タイトルを入力"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="description" className="text-sm font-semibold text-gray-700">
+                          説明
+                        </Label>
+                        <Textarea
+                          id="description"
+                          value={editedItem?.description}
+                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          className="w-full min-h-[100px] border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg"
+                          placeholder="詳しい説明を入力"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="duration" className="text-sm font-semibold text-gray-700">
+                            所要時間
+                          </Label>
+                          <Input
+                            id="duration"
+                            value={editedItem?.duration}
+                            onChange={(e) => handleInputChange('duration', e.target.value)}
+                            className="w-full border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg"
+                            placeholder="例: 2時間"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cost" className="text-sm font-semibold text-gray-700">
+                            費用
+                          </Label>
+                          <Input
+                            id="cost"
+                            type="number"
+                            value={editedItem?.cost}
+                            onChange={(e) => handleInputChange('cost', e.target.value)}
+                            className="w-full border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg"
+                            placeholder="例: 5000"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="goal" className="text-sm font-semibold text-gray-700">
+                          ゴール
+                        </Label>
+                        <Textarea
+                          id="goal"
+                          value={editedItem?.goal}
+                          onChange={(e) => handleInputChange('goal', e.target.value)}
+                          className="w-full min-h-[100px] border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg font-mono"
+                          placeholder="達成したい目標を入力&#10;（マークダウン形式で記述可能）"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="actionPlan" className="text-sm font-semibold text-gray-700">
+                          アクションプラン
+                        </Label>
+                        <Textarea
+                          id="actionPlan"
+                          value={editedItem?.actionPlan}
+                          onChange={(e) => handleInputChange('actionPlan', e.target.value)}
+                          className="w-full min-h-[150px] border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg font-mono"
+                          placeholder="具体的な行動計画を入力&#10;（マークダウン形式で記述可能）"
+                        />
+                      </div>
+                    </div>
+
+                    <DialogFooter className="mt-6">
+                      <Button
+                        onClick={handleEditSubmit}
+                        className={`w-full ${
+                          isEdited 
+                            ? 'bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white' 
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                        disabled={!isEdited}
+                      >
+                        保存する
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">ゴール:</h3>
+                <ReactMarkdown className="prose prose-sm max-w-none">
+                  {selectedItem?.goal || 'ゴールが設定されていません'}
+                </ReactMarkdown>
+              </div>
               <div>
                 <h3 className="font-semibold mb-2">アクションプラン:</h3>
-                <ul className="space-y-2">
-                  {selectedItem.actionPlan.map((step, index) => (
-                    <li key={index} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`task-${index}`}
-                        checked={step.completed}
-                        onCheckedChange={() => handleActionPlanChange(index)}
-                      />
-                      <label
-                        htmlFor={`task-${index}`}
-                        className={`break-words ${step.completed ? 'line-through text-gray-500' : ''}`}
-                      >
-                        {step.task}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
+                <ReactMarkdown className="prose prose-sm max-w-none">
+                  {selectedItem?.actionPlan || 'アクションプランが設定されていません'}
+                </ReactMarkdown>
               </div>
+              
+              <Button
+                onClick={() => setIsAchievedDialogOpen(true)}
+                className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 rounded-lg"
+              >
+                <Trophy className="w-5 h-5 mr-2" />
+                達成！
+              </Button>
+
+              {/* 達成報告用のダイアログ */}
+              <Dialog open={isAchievedDialogOpen} onOpenChange={setIsAchievedDialogOpen}>
+                <DialogContent className="sm:max-w-[500px] bg-white"> 
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                      おめでとうございます！🎉
+                    </DialogTitle>
+                    <DialogDescription>
+                      達成した日付と感想を記録しましょう
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="grid gap-6 py-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">
+                        達成日
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !achievementDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {achievementDate ? format(achievementDate, 'yyyy年MM月dd日') : "日付を選択"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0" align="start"> 
+                          <Calendar
+                            mode="single"
+                            selected={achievementDate}
+                            onSelect={setAchievementDate}
+                            initialFocus
+                            className="shadcn-calendar"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="thoughts" className="text-sm font-semibold text-gray-700">
+                        達成した感想
+                      </Label>
+                      <Textarea
+                        id="thoughts"
+                        value={thoughts}
+                        onChange={(e) => setThoughts(e.target.value)}
+                        className="w-full min-h-[150px] border-gray-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg"
+                        placeholder="達成してみてどうでしたか？"
+                      />
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      onClick={handleAchievementSubmit}
+                      disabled={!achievementDate || !thoughts.trim()} // 空白のみの入力を防ぐために trim() を使用
+                      className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white"
+                    >
+                      完了
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </CardContent>

@@ -55,6 +55,10 @@ export interface WishCustom {
     user_id: string;
     status: string;
     original_flag: string;
+    action: string;
+    goal: string;
+    achievement_date: string;
+    thoughts: string;
 }
 
 

@@ -5,78 +5,14 @@ import Image from 'next/image'
 import { useSpring, animated } from '@react-spring/web'
 import { ThumbsUp, ThumbsDown, Check, ChevronLeft, ChevronDown, ChevronRight, Info } from 'lucide-react'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-
-type WishlistItem = {
-  id: number
-  image: string
-  title: string
-  budget: string
-  duration: string
-  description: string
-}
-
-const sampleData: WishlistItem[] = [
-  {
-    id: 1,
-    image: 'https://images.unsplash.com/photo-1546529249-8de036dd3c9a?w=500&h=500&fit=crop',
-    title: '富士山に登る',
-    budget: '¥30,000',
-    duration: '2日間',
-    description: '日本最高峰の山、富士山に挑戦。美しい景色と達成感を味わえる冒険です。初心者でも挑戦可能ですが、適切な準備が必要です。'
-  },
-  {
-    id: 2,
-    image: 'https://images.unsplash.com/photo-1547448415-e9f5b28e570d?w=500&h=500&fit=crop',
-    title: '京都で茶道体験',
-    budget: '¥5,000',
-    duration: '2時間',
-    description: '伝統的な日本文化である茶道体験。静寂な茶室で、お茶の作法を学びながら心を落ち着かせる時間を過ごします。'
-  },
-  {
-    id: 3,
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&h=500&fit=crop',
-    title: '沖縄でダイビング',
-    budget: '¥15,000',
-    duration: '半日',
-    description: '透明度の高い沖縄の海で、カラフルな魚や珊瑚礁を観察。初心者向けの体験ダイビングから、ライセンス取得まで可能です。'
-  },
-  {
-    id: 4,
-    image: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=500&h=500&fit=crop',
-    title: '北海道で温泉巡り',
-    budget: '¥50,000',
-    duration: '3日間',
-    description: '北海道の名湯を巡る旅。露天風呂から雄大な自然を眺めながら、心身ともにリラックスできる贅沢な時間を過ごします。'
-  },
-  {
-    id: 5,
-    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=500&h=500&fit=crop',
-    title: '東京スカイツリーで夜景鑑賞',
-    budget: '¥3,000',
-    duration: '2時間',
-    description: '世界一高い電波塔から東京の夜景を一望。都市の輝きを眺めながら、特別なディナーを楽しむこともできます。'
-  },
-  {
-    id: 6,
-    image: 'https://images.unsplash.com/photo-1565953522043-baea26b83b7e?w=500&h=500&fit=crop',
-    title: '奈良で鹿と触れ合う',
-    budget: '¥2,000',
-    duration: '半日',
-    description: '奈良公園で神聖な鹿たちと触れ合う体験。鹿せんべいをあげながら、古都奈良の歴史的な雰囲気を楽しみます。'
-  },
-  {
-    id: 7,
-    image: 'https://images.unsplash.com/photo-1480796927426-f609979314bd?w=500&h=500&fit=crop',
-    title: '鎌倉で座禅体験',
-    budget: '¥3,500',
-    duration: '1時間',
-    description: '古刹で本格的な座禅を体験。心を静め、自己と向き合う時間を過ごします。初心者でも丁寧な指導を受けられます。'
-  }
-]
+import { WishBase } from '@/utils/interface'
+import { getBaseWishes } from '@/utils/supabaseFunctions'
 
 export function WishlistMatchingComponent() {
+  const [wishes, setWishes] = useState<WishBase[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState<'left' | 'down' | 'right' | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const [props, api] = useSpring(() => ({
     x: 0,
@@ -96,7 +32,7 @@ export function WishlistMatchingComponent() {
       api.start({ x: 120, rotation: 10, opacity: 0 })
     }
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % sampleData.length)
+      setCurrentIndex((prev) => (prev + 1) % wishes.length)
       setDirection(null)
       api.start({ 
         from: { x: 0, y: 0, rotation: 0, opacity: 0 },
@@ -115,8 +51,29 @@ export function WishlistMatchingComponent() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const currentItem = sampleData[currentIndex]
-  const nextItem = sampleData[(currentIndex + 1) % sampleData.length]
+  useEffect(() => {
+    async function fetchWishes() {
+      const { data, error } = await getBaseWishes()
+      if (data) {
+        setWishes(data)
+      } else {
+        console.error('ウィッシュの取得に失敗しました:', error)
+      }
+      setLoading(false)
+    }
+    fetchWishes()
+  }, [])
+
+  const currentItem = wishes[currentIndex]
+  const nextItem = wishes[(currentIndex + 1) % wishes.length]
+
+  if (loading) {
+    return <div>読み込み中...</div>
+  }
+
+  if (wishes.length === 0) {
+    return <div>ウィッシュが見つかりませんでした</div>
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -179,10 +136,10 @@ export function WishlistMatchingComponent() {
           <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
             <div
               className="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full"
-              style={{ width: `${((currentIndex + 1) / sampleData.length) * 100}%` }}
+              style={{ width: `${((currentIndex + 1) / wishes.length) * 100}%` }}
             ></div>
           </div>
-          <p className="text-center mt-2 text-sm text-gray-600">{currentIndex + 1}/{sampleData.length}</p>
+          <p className="text-center mt-2 text-sm text-gray-600">{currentIndex + 1}/{wishes.length}</p>
         </div>
         <div className="flex justify-center mb-2 sm:mb-4">
           <Dialog>
@@ -219,12 +176,12 @@ export function WishlistMatchingComponent() {
   )
 }
 
-function Card({ item }: { item: WishlistItem }) {
+function Card({ item }: { item: WishBase }) {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden h-full">
       <div className="relative h-64">
         <Image
-          src={item.image}
+          src={item.basewish_image_url}
           alt={item.title}
           layout="fill"
           objectFit="cover"
@@ -232,12 +189,12 @@ function Card({ item }: { item: WishlistItem }) {
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
           <h2 className="text-white text-xl font-bold">{item.title}</h2>
           <p className="text-white text-sm">
-            予算: {item.budget} | 所要時間: {item.duration}
+            予算: ¥{item.cost.toLocaleString()} | 所要時間: {item.duration}
           </p>
         </div>
       </div>
       <div className="p-4">
-        <p className="text-gray-600 text-sm line-clamp-3">{item.description}</p>
+        <p className="text-gray-600 text-sm line-clamp-3">{item.detail}</p>
       </div>
     </div>
   )

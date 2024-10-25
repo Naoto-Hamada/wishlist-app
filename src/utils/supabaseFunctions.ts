@@ -97,3 +97,17 @@ export async function updateUserProfile(userId: string, updates: Partial<userpro
     return { data: null, error };
   }
 }
+
+export async function getBaseWishes() {
+  try {
+    const { data, error } = await supabase
+      .from('WishBase')
+      .select('*');
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('ベースウィッシュ取得エラー:', error);
+    return { data: null, error };
+  }
+}

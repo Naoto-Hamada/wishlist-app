@@ -57,15 +57,23 @@ export function Register() {
     e.preventDefault()
     setIsLoading(true)
     setSignUpError('')
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) {
-      console.error('サインアップエラー:', error.message)
-      setSignUpError(error.message)
-    } else {
-      console.log('サインアップ成功')
-      setSignUpSuccess(true)
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        console.error('サインアップエラー:', error.message)
+        setSignUpError(error.message)
+      } else if (data.user) {
+        console.log('サインアップ成功')
+        setSignUpSuccess(true)
+      } else {
+        setSignUpError('予期せぬエラーが発生しました。')
+      }
+    } catch (error) {
+      console.error('予期せぬエラー:', error)
+      setSignUpError('サーバーエラーが発生しました。後でもう一度お試しください。')
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   const handleGoogleSignIn = async () => {

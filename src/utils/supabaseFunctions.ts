@@ -193,3 +193,40 @@ export async function deleteCustomWish(userId: string, baseWishId: string) {
       base_wish_id: baseWishId 
     });
 }
+
+export async function getWishesByStatus(userId: string, status: string) {
+  try {
+    console.log(`Fetching wishes with status "${status}" for user ${userId}`);
+    
+    const { data, error } = await supabase
+      .from('WishCustom')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', status);
+
+    console.log('Supabase response:', { data, error });
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('ウィッシュ取得エラー:', error);
+    return { data: null, error };
+  }
+}
+
+export async function updateWishStatus(userId: string, baseWishId: string, status: string) {
+  try {
+    const { data, error } = await supabase
+      .from('WishCustom')
+      .update({ status: status })
+      .eq('user_id', userId)
+      .eq('base_wish_id', baseWishId)
+      .select();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('ステータス更新エラー:', error);
+    return { data: null, error };
+  }
+}

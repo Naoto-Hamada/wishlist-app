@@ -11,6 +11,7 @@ import { getUserProfile } from '../utils/supabaseFunctions'
 import { userprofile } from '../utils/interface'
 import { useRouter } from 'next/navigation'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { UserAuth } from '../utils/interface'
 
 type LayoutProps = {
   children: ReactNode
@@ -21,37 +22,101 @@ export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [userProfile, setUserProfile] = useState<userprofile | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserAuth | null>(null)
   const router = useRouter()
   const user = useUser()
   const supabase = useSupabase()
   const session = useSession()
   const pathname = usePathname()
 
+  // ユーザー情報とプロファイル情報を取得
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-      } else {
+    const getCurrentUser = async () => {
+      try {
+        // 1. セッション情報を取得とデバッグログ
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        console.log('1. セッション情報:', session?.user?.id)
+
+        if (sessionError) throw sessionError
+
+        if (!session) {
+          console.log('セッションなし')
+          if (pathname !== '/login') router.push('/login')
+          return
+        }
+
+        // 2. プロフィール情報を取得
+        const { data: profileData, error: profileError } = await supabase
+          .from('userprofile')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        console.log('2. クエリ結果:', {
+          profileData,
+          profileError,
+          queriedId: session.user.id
+        })
+
+        // 3. プロフィールが存在しない場合は作成
+        if (profileError?.code === 'PGRST116') {
+          console.log('3. プロフィール作成開始')
+          const { data: newProfile, error: createError } = await supabase
+            .from('userprofile')
+            .insert([
+              {
+                id: session.user.id,  // idを明示的に指定
+                nickname: 'ゲスト',
+                // 他のフィールドはnullまたはデフォルト値
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+            ])
+            .select()
+            .single()
+
+          console.log('4. プロフィール作成結果:', {
+            newProfile,
+            createError
+          })
+
+          if (createError) throw createError
+          setUserProfile(newProfile)
+        } else if (profileError) {
+          throw profileError
+        } else {
+          setUserProfile(profileData)
+        }
+
+      } catch (error) {
+        console.error('詳細なエラー情報:', {
+          error,
+          message: error.message,
+          code: error.code
+        })
+        if (pathname !== '/login') router.push('/login')
+      } finally {
         setIsLoading(false)
       }
     }
 
-    checkUser()
-  }, [supabase, router])
+    getCurrentUser()
+  }, [supabase, router, pathname])
 
-  useEffect(() => {
-    async function fetchUserProfile() {
-      if (session?.user) {
-        const profile = await getUserProfile(session.user.id)
-        if (profile) {
-          setUserProfile(profile)
-        }
-      }
+  // ログアウト処理
+  const confirmLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      setCurrentUser(null)
+      setUserProfile(null)
+      router.push('/login')
+    } catch (error) {
+      console.error('ログアウトに失敗しました:', error.message)
+    } finally {
+      setShowLogoutConfirm(false)
     }
-
-    fetchUserProfile()
-  }, [session])
+  }
 
   if (isLoading) {
     return <div>読み込み中...</div>
@@ -63,12 +128,6 @@ export function Layout({ children }: LayoutProps) {
 
   const handleLogout = () => {
     setShowLogoutConfirm(true)
-  }
-
-  const confirmLogout = () => {
-    // ここにログアウト処理を追加
-    // 例: logout()
-    window.location.href = '/login' // ログイン画面へ遷移
   }
 
   const cancelLogout = () => {

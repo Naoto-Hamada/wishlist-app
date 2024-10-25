@@ -55,3 +55,23 @@ export async function getUserProfile(userId: string): Promise<userprofile | null
     return null;
   }
 }
+
+export async function getCurrentSession() {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) throw error
+    return { session, error: null }
+  } catch (error) {
+    return { session: null, error }
+  }
+}
+
+export async function getCurrentUser() {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error) throw error
+    return { user, error: null }
+  } catch (error) {
+    return { user: null, error }
+  }
+}

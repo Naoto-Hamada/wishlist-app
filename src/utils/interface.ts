@@ -1,18 +1,6 @@
-export interface UserAuth {
-    user_id: string;
-    auth_type: string;
-    password_hash: string;
-    google_id: string;
-    mfa_enabled: boolean;
-    mfa_method: string;
-    mfa_secret: string;
-    mfa_email: string;
-    created_at: string;
-    updated_at: string;
-}
 
 export interface userprofile {
-    user_id: string;
+    id: string;
     nickname: string;
     age: number;
     gender: string;

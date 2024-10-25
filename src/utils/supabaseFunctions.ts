@@ -111,3 +111,33 @@ export async function getBaseWishes() {
     return { data: null, error };
   }
 }
+
+export async function createCustomWish(baseWish: WishBase, userId: string, status: string) {
+  try {
+    const customWish = {
+      base_wish_id: baseWish.base_wish_id,
+      title: baseWish.title,
+      detail: baseWish.detail,
+      duration: baseWish.duration, // テキストとしてそのまま保存
+      cost: baseWish.cost,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      customwish_image_url: baseWish.basewish_image_url,
+      user_id: userId,
+      status: status
+    };
+
+    console.log('Prepared custom wish object:', customWish);
+
+    const { data, error } = await supabase
+      .from('WishCustom')
+      .insert(customWish)
+      .select();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('カスタムウィッシュ作成エラー:', error);
+    return { data: null, error };
+  }
+}

@@ -43,16 +43,17 @@ export interface WishBase {
 }
 
 export interface WishCustom {
-    user_id: string;
+    base_wish_id: string;
     title: string;
     detail: string;
-    duration: number;
-    cost: string;
+    duration: string;
+    cost: number;
     created_at: string;
     updated_at: string;
-    custom_wish_id: string;
-    base_wish_id: string;
     customwish_image_url: string;
+    custom_wish_id: string;
+    user_id: string;
+    status: string;
 }
 
 

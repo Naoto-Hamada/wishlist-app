@@ -6,13 +6,14 @@ import { useSpring, animated } from '@react-spring/web'
 import { ThumbsUp, ThumbsDown, Check, ChevronLeft, ChevronDown, ChevronRight, Info } from 'lucide-react'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { WishBase } from '@/utils/interface'
-import { getBaseWishes } from '@/utils/supabaseFunctions'
+import { getBaseWishes, createCustomWish, getCurrentUser } from '@/utils/supabaseFunctions'
 
 export function WishlistMatchingComponent() {
   const [wishes, setWishes] = useState<WishBase[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState<'left' | 'down' | 'right' | null>(null)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
 
   const [props, api] = useSpring(() => ({
     x: 0,
@@ -22,8 +23,23 @@ export function WishlistMatchingComponent() {
     config: { tension: 280, friction: 60 },
   }))
 
-  const handleSwipe = (dir: 'left' | 'down' | 'right') => {
+  useEffect(() => {
+    async function fetchUser() {
+      const { user } = await getCurrentUser()
+      setUser(user)
+    }
+    fetchUser()
+  }, [])
+
+  const handleSwipe = async (dir: 'left' | 'down' | 'right') => {
     setDirection(dir)
+    
+    // デバッグログを追加
+    console.log('Swipe direction:', dir);
+    console.log('Current user:', user);
+    console.log('Current item:', currentItem);
+
+    // アニメーション処理
     if (dir === 'left') {
       api.start({ x: -120, rotation: -10, opacity: 0 })
     } else if (dir === 'down') {
@@ -31,6 +47,26 @@ export function WishlistMatchingComponent() {
     } else {
       api.start({ x: 120, rotation: 10, opacity: 0 })
     }
+
+    // カスタムウィッシュの作成
+    if (user) {
+      const status = dir === 'left' ? 'やりたい' :
+                    dir === 'down' ? '興味はない' :
+                    'やったことある';
+      
+      console.log('Creating custom wish with status:', status);
+      
+      const { error } = await createCustomWish(currentItem, user.id, status);
+      if (error) {
+        console.error('カスタムウィッシュの作成に失敗しました:', error);
+      } else {
+        console.log('カスタムウィッシュが正常に作成されました');
+      }
+    } else {
+      console.warn('ユーザーが見つかりません');
+    }
+
+    // 次のカードへの移動
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % wishes.length)
       setDirection(null)

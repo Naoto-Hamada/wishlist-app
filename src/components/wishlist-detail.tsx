@@ -19,6 +19,7 @@ import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
 import { ja } from "date-fns/locale" // 日本語ローカライズ
+import { Check } from 'lucide-react'
 
 interface WishlistItem {
   id: string;
@@ -40,6 +41,7 @@ export function WishlistDetailComponent() {
   const [isAchievedDialogOpen, setIsAchievedDialogOpen] = useState(false)
   const [achievementDate, setAchievementDate] = useState<Date>()
   const [thoughts, setThoughts] = useState("")
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
 
   useEffect(() => {
     async function fetchWishlistItems() {
@@ -177,6 +179,20 @@ export function WishlistDetailComponent() {
         // データの更新処理
         // ...
       }
+    }
+  };
+
+  const handleCompletion = async () => {
+    // Supabaseの非同期処理
+    const { error } = await updateCustomWish('someCustomWishId', { status: 'completed' });
+    if (!error) {
+      setShowCompletionDialog(true);
+      setTimeout(() => {
+        setShowCompletionDialog(false);
+        window.location.reload();
+      }, 1000); // 1秒後にリロード
+    } else {
+      console.error('更新エラー:', error);
     }
   };
 
@@ -449,6 +465,28 @@ export function WishlistDetailComponent() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 完了メッセージ用のDialog */}
+      {showCompletionDialog && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black bg-opacity-50" />
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 relative">
+            <div className="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto">
+              <div className="text-center">
+                <div className="mb-4 bg-gradient-to-r from-teal-400 to-blue-500 p-3 rounded-full inline-flex">
+                  <Check className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent mb-3">
+                  お疲れさまでした！この調子で行きましょう！
+                </h3>
+                <div className="mt-6">
+                  <div className="h-1 w-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full mx-auto"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

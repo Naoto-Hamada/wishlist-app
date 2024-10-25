@@ -157,6 +157,52 @@ export function Settings() {
     }
   }
 
+  // postalCodeの編集部分を更新
+  const handlePostalCodeChange = async (value: string) => {
+    let formattedValue = value.replace(/[^0-9-]/g, '');
+    console.log('Formatted postal code:', formattedValue); // 整形された郵便番号
+
+    if (formattedValue.length === 3 && !formattedValue.includes('-')) {
+      formattedValue = formattedValue + '-';
+    }
+    if (formattedValue.length <= 8) {
+      setPostalCode(formattedValue);
+      
+      // 7桁の数字が入力された場合、住所を検索
+      if (formattedValue.replace('-', '').length === 7) {
+        try {
+          console.log('Fetching address for:', formattedValue); // API呼び出し時の郵便番号
+          const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${formattedValue}`);
+          const data = await response.json();
+          console.log('API response:', data); // APIからのレスポンス
+          
+          if (data.results) {
+            const result = data.results[0];
+            const fullAddress = `${result.address1}${result.address2}${result.address3}`;
+            console.log('Generated address:', fullAddress); // 生成された住所
+            setAddress(fullAddress);
+            
+            // userprofileのaddressも更新
+            const { data: { user } } = await supabase.auth.getUser();
+            console.log('Current user:', user); // ユーザー情報
+            
+            if (user) {
+              const updates: Partial<userprofile> = {
+                address: fullAddress,
+                updated_at: new Date().toISOString()
+              };
+              console.log('Updating profile with:', updates); // 更新データ
+              const result = await updateUserProfile(user.id, updates);
+              console.log('Update result:', result); // 更新結果
+            }
+          }
+        } catch (error) {
+          console.error('住所の取得に失敗しました:', error);
+        }
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 bg-[#F3F4F6]">
       <div className="w-full max-w-2xl mx-auto">
@@ -359,17 +405,10 @@ export function Settings() {
                   <Input
                     id="postalCode"
                     value={postalCode === '（未入力）' ? '' : postalCode}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/[^0-9-]/g, '');
-                      if (value.length === 3 && !value.includes('-')) {
-                        value = value + '-';
-                      }
-                      if (value.length <= 8) {
-                        setPostalCode(value);
-                      }
-                    }}
+                    onChange={(e) => handlePostalCodeChange(e.target.value)}
                     className="border-none bg-transparent flex-grow"
                     maxLength={8}
+                    placeholder="123-4567"
                   />
                 ) : (
                   <span className="text-base">{postalCode || '（未入力）'}</span>
@@ -387,9 +426,12 @@ export function Settings() {
                 </Button>
               </div>
               {address && (
-                <span className="text-sm text-gray-500 block mt-1 pl-4">
-                  {address || '（未入力）'}
-                </span>
+                <div className="mt-2">
+                  <Label className="text-sm font-medium text-gray-500">居住地区</Label>
+                  <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 min-h-[56px]">
+                    <span className="text-base">{address}</span>
+                  </div>
+                </div>
               )}
             </div>
 

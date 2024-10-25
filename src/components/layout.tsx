@@ -6,27 +6,56 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Card, CardContent, Button } from '@mui/material'
 import { useSupabase } from '../utils/supabase'
-import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react'
+import { SessionContextProvider, useSession, useUser } from '@supabase/auth-helpers-react'
+import { getUserProfile } from '../utils/supabaseFunctions'
+import { userprofile } from '../utils/interface'
+import { useRouter } from 'next/navigation'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 
 type LayoutProps = {
   children: ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [isLoading, setIsLoading] = useState(true)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [nickname, setNickname] = useState("")
-  const pathname = usePathname()
+  const [userProfile, setUserProfile] = useState<userprofile | null>(null)
+  const router = useRouter()
+  const user = useUser()
   const supabase = useSupabase()
   const session = useSession()
+  const pathname = usePathname()
 
   useEffect(() => {
-    if (session?.user) {
-      // ニックネームを取得する処理を追加
-      // 例: setNickname(session.user.user_metadata.nickname)
-      setNickname("ユーザー") // 仮のニックネーム
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
+      } else {
+        setIsLoading(false)
+      }
     }
+
+    checkUser()
+  }, [supabase, router])
+
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (session?.user) {
+        const profile = await getUserProfile(session.user.id)
+        if (profile) {
+          setUserProfile(profile)
+        }
+      }
+    }
+
+    fetchUserProfile()
   }, [session])
+
+  if (isLoading) {
+    return <div>読み込み中...</div>
+  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -56,6 +85,7 @@ export function Layout({ children }: LayoutProps) {
     { icon: LogOut, label: "ログアウト", onClick: handleLogout }
   ]
 
+  // ユーザーがログインしている場合のみ、以下のコンテンツを表示
   return (
     <SessionContextProvider supabaseClient={supabase}>
       <div className="flex flex-col min-h-screen">
@@ -66,7 +96,7 @@ export function Layout({ children }: LayoutProps) {
           </Link>
           <div className="flex items-center">
             <Link href="/settingspage" className="mr-4 hover:text-gray-200 transition-colors duration-200">
-              {nickname}
+              {userProfile ? userProfile.nickname : 'ニックネームを入力'}
             </Link>
             <button onClick={toggleMenu} className="md:hidden text-white focus:outline-none" aria-label="メニューを開く">
               <Menu className="h-6 w-6" />
@@ -112,7 +142,7 @@ export function Layout({ children }: LayoutProps) {
               <nav className="bg-white w-64 h-full absolute right-0 shadow-lg pt-16">
                 <div className="p-4 border-b border-gray-200">
                   <Link href="/settingspage" className="text-gray-700 hover:text-teal-500 transition-colors duration-200">
-                    {nickname}
+                    {userProfile ? userProfile.nickname : 'ニックネームを入力'}
                   </Link>
                 </div>
                 <ul className="p-4">

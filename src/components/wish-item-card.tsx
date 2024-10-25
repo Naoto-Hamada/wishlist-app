@@ -13,19 +13,36 @@ interface WishItemCardProps {
 export function WishItemCard({ wish, isSelected, onMove }: WishItemCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
+  // デフォルトの画像URLを設定
+  const defaultImageUrl = 'https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' // デフォルト画像のパスを設定
+
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'wishItem',
+    item: { id: wish.custom_wish_id, wish },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  }))
+
   return (
     <>
       <div
+        ref={drag}
         onClick={() => setIsOpen(true)}
         className="relative cursor-pointer transition-all hover:opacity-90"
       >
         <div className="relative w-full" style={{ paddingBottom: '61.8%' }}>
           <Image
-            src={wish.customwish_image_url}
+            src={wish.customwish_image_url || defaultImageUrl}
             alt={wish.title}
             layout="fill"
             objectFit="cover"
             className="rounded-lg"
+            onError={(e) => {
+              // エラー時にデフォルト画像を表示
+              const target = e.target as HTMLImageElement;
+              target.src = defaultImageUrl;
+            }}
           />
           <div className="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-50 text-white rounded-b-lg">
             <h3 className="text-sm font-medium truncate">{wish.title}</h3>
@@ -44,11 +61,16 @@ export function WishItemCard({ wish, isSelected, onMove }: WishItemCardProps) {
           <Dialog.Panel className="w-full max-w-[400px] rounded-lg bg-white">
             <div className="relative w-full" style={{ paddingBottom: '61.8%' }}>
               <Image
-                src={wish.customwish_image_url}
+                src={wish.customwish_image_url || defaultImageUrl}
                 alt={wish.title}
                 layout="fill"
                 objectFit="cover"
                 className="rounded-t-lg"
+                onError={(e) => {
+                  // エラー時にデフォルト画像を表示
+                  const target = e.target as HTMLImageElement;
+                  target.src = defaultImageUrl;
+                }}
               />
             </div>
             

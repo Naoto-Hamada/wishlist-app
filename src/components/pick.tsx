@@ -5,7 +5,7 @@ import { DndProvider, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getCurrentUser, getWishesByStatus, updateWishStatus } from '@/utils/supabaseFunctions'
 import { WishCustom } from '@/utils/interface'
-import { Image } from 'next/image'
+import Image from 'next/image'
 import { WishItemCard } from './wish-item-card'  // 新しくインポート
 
 export function WishlistMatching() {
@@ -138,7 +138,7 @@ function ItemsArea({ items, isSelected, onMove }: ItemsAreaProps) {
       >
         {items.map((item) => (
           <WishItemCard
-            key={item.base_wish_id}
+            key={item.custom_wish_id} // base_wish_idの代わりにcustom_wish_idを使用
             wish={item}
             isSelected={isSelected}
             onMove={onMove}

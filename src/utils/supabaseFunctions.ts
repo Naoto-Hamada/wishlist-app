@@ -4,6 +4,10 @@ import { userprofile } from './interface';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
+// デバッグログを追加
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Anon Key:', supabaseAnonKey)
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function signInWithEmail(email: string, password: string) {
@@ -143,7 +147,8 @@ export async function getUnratedBaseWishes(userId: string) {
     const { data: ratedWishes, error: ratedError } = await supabase
       .from('WishCustom')
       .select('base_wish_id')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .not('base_wish_id', 'is', null); // nullでないbase_wish_idのみを取得
     
     // デバッグログを追加
     console.log('評価済みウィッシュ:', ratedWishes);
@@ -165,9 +170,9 @@ export async function getUnratedBaseWishes(userId: string) {
 
     if (wishError) throw wishError;
 
-    // JavaScriptでフィルタリング
-    const unratedWishes = allWishes.filter(
-      wish => !ratedWishIds.includes(wish.base_wish_id)
+    // JavaScriptでフィルタリング（base_wish_idがnullの場合を考慮）
+    const unratedWishes = allWishes.filter(wish => 
+      wish.base_wish_id && !ratedWishIds.includes(wish.base_wish_id)
     );
 
     console.log('フィルタ後のウィッシュ:', unratedWishes.length);

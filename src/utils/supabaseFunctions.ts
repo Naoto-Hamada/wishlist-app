@@ -41,7 +41,7 @@ export function useSupabase() {
   return supabase
 }
 
-// Settingsにuserprofileを表示するため、userprofileDBからデータを取得する関数
+// Settingsにuserprofileを表示するため、userprofileDBからデータ��取得する関数
 
 export async function getUserProfile(userId: string): Promise<userprofile | null> {
   try {
@@ -203,6 +203,7 @@ export async function getWishesByStatus(userId: string, status: string) {
       .select('*')
       .eq('user_id', userId)
       .eq('status', status);
+      // base_wish_idがnullかどうかに関係なく、すべてのアイテムを取得します
 
     console.log('Supabase response:', { data, error });
 
@@ -214,14 +215,20 @@ export async function getWishesByStatus(userId: string, status: string) {
   }
 }
 
-export async function updateWishStatus(userId: string, baseWishId: string, status: string) {
+export async function updateWishStatus(userId: string, baseWishId: string | null, customWishId: string, status: string) {
   try {
-    const { data, error } = await supabase
+    const query = supabase
       .from('WishCustom')
       .update({ status: status })
       .eq('user_id', userId)
-      .eq('base_wish_id', baseWishId)
-      .select();
+      .eq('custom_wish_id', customWishId);
+    
+    // base_wish_idがある場合のみ、その条件も追加
+    if (baseWishId) {
+      query.eq('base_wish_id', baseWishId);
+    }
+
+    const { data, error } = await query.select();
 
     if (error) throw error;
     return { data, error: null };

@@ -183,3 +183,13 @@ export async function getUnratedBaseWishes(userId: string) {
     return { data: null, error };
   }
 }
+
+export async function deleteCustomWish(userId: string, baseWishId: string) {
+  return await supabase
+    .from('WishCustom')
+    .delete()
+    .match({ 
+      user_id: userId, 
+      base_wish_id: baseWishId 
+    });
+}

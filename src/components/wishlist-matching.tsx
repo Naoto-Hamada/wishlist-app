@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSpring, animated } from '@react-spring/web'
-import { ThumbsUp, ThumbsDown, Check, ChevronLeft, ChevronDown, ChevronRight, Info } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, Check, ChevronLeft, ChevronDown, ChevronRight, Info, Undo2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { WishBase } from '@/utils/interface'
-import { getUnratedBaseWishes, createCustomWish, getCurrentUser } from '@/utils/supabaseFunctions'
+import { getUnratedBaseWishes, createCustomWish, getCurrentUser, deleteCustomWish } from '@/utils/supabaseFunctions'
 
 export function WishlistMatchingComponent() {
   const [wishes, setWishes] = useState<WishBase[]>([])
@@ -14,6 +14,11 @@ export function WishlistMatchingComponent() {
   const [direction, setDirection] = useState<'left' | 'down' | 'right' | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [history, setHistory] = useState<{
+    wish: WishBase;
+    status: string;
+    index: number;
+  }[]>([])
 
   const [props, api] = useSpring(() => ({
     x: 0,
@@ -32,6 +37,13 @@ export function WishlistMatchingComponent() {
   }, [])
 
   const handleSwipe = async (dir: 'left' | 'down' | 'right') => {
+    // アニメーション前に現在の状態を履歴に保存
+    setHistory(prev => [...prev, {
+      wish: currentItem,
+      status: dir === 'left' ? 'やりたい' : dir === 'down' ? '興味はない' : 'やったことある',
+      index: currentIndex
+    }])
+
     setDirection(dir)
     
     // デバッグログを追加
@@ -77,15 +89,45 @@ export function WishlistMatchingComponent() {
     }, 300)
   }
 
+  const handleUndo = async () => {
+    if (history.length === 0) return;
+
+    // 最後の履歴を取得
+    const lastAction = history[history.length - 1];
+
+    // データベースから最後のアクションを削除
+    if (user) {
+      const { error } = await deleteCustomWish(user.id, lastAction.wish.base_wish_id);
+      
+      if (error) {
+        console.error('元に戻す操作に失敗しました:', error);
+        return;
+      }
+    }
+
+    // インデックスを戻す
+    setCurrentIndex(lastAction.index);
+
+    // 履歴から削除
+    setHistory(prev => prev.slice(0, -1));
+
+    // アニメーションをリセット
+    api.start({ 
+      from: { x: 0, y: 0, rotation: 0, opacity: 0 },
+      to: { x: 0, y: 0, rotation: 0, opacity: 1 }
+    });
+  }
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowLeft') handleSwipe('left')
       else if (event.key === 'ArrowDown') handleSwipe('down')
       else if (event.key === 'ArrowRight') handleSwipe('right')
+      else if (event.key === 'z' && (event.ctrlKey || event.metaKey)) handleUndo()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [history, user])
 
   useEffect(() => {
     async function fetchWishes() {
@@ -191,7 +233,7 @@ export function WishlistMatchingComponent() {
           </div>
           <p className="text-center mt-2 text-sm text-gray-600">{currentIndex + 1}/{wishes.length}</p>
         </div>
-        <div className="flex justify-center mb-2 sm:mb-4">
+        <div className="flex justify-center space-x-4 mb-2 sm:mb-4">
           <Dialog>
             <DialogTrigger asChild>
               <button className="flex items-center text-sm text-gray-600 hover:text-gray-800">
@@ -220,6 +262,16 @@ export function WishlistMatchingComponent() {
               </ul>
             </DialogContent>
           </Dialog>
+          <button 
+            onClick={handleUndo}
+            disabled={history.length === 0}
+            className={`flex items-center text-sm ${
+              history.length === 0 ? 'text-gray-400' : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Undo2 className="w-4 h-4 mr-1" />
+            元に戻す (Ctrl+Z)
+          </button>
         </div>
       </div>
     </div>

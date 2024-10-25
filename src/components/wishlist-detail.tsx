@@ -171,28 +171,17 @@ export function WishlistDetailComponent() {
     setAchievementDate(undefined);
     setThoughts("");
 
-    // 必要に応じてデータを再取得
-    const { user } = await getCurrentUser();
-    if (user) {
-      const { data } = await getWishesByStatus(user.id, 'やったことある');
-      if (data) {
-        // データの更新処理
-        // ...
-      }
-    }
+    // ページをリロード
+    window.location.reload();
   };
 
   const handleCompletion = async () => {
-    // Supabaseの非同期処理
-    const { error } = await updateCustomWish('someCustomWishId', { status: 'completed' });
-    if (!error) {
-      setShowCompletionDialog(true);
-      setTimeout(() => {
-        setShowCompletionDialog(false);
-        window.location.reload();
-      }, 1000); // 1秒後にリロード
+    // フォームデータを送信する処理
+    const { error } = await updateCustomWish('someCustomWishId', { /* 必要なデータをここに追加 */ });
+    if (error) {
+      console.error('送信エラー:', error);
     } else {
-      console.error('更新エラー:', error);
+      console.log('データが正常に送信されました');
     }
   };
 
@@ -411,29 +400,13 @@ export function WishlistDetailComponent() {
                       <Label className="text-sm font-semibold text-gray-700">
                         達成日
                       </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !achievementDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {achievementDate ? format(achievementDate, 'yyyy年MM月dd日') : "日付を選択"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="start"> 
-                          <Calendar
-                            mode="single"
-                            selected={achievementDate}
-                            onSelect={setAchievementDate}
-                            initialFocus
-                            className="shadcn-calendar"
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <Calendar
+                        mode="single"
+                        selected={achievementDate}
+                        onSelect={setAchievementDate}
+                        initialFocus
+                        className="shadcn-calendar"
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -453,7 +426,7 @@ export function WishlistDetailComponent() {
                   <DialogFooter>
                     <Button
                       onClick={handleAchievementSubmit}
-                      disabled={!achievementDate || !thoughts.trim()} // 空白のみの入力を防ぐために trim() を使用
+                      disabled={!achievementDate || !thoughts.trim()}
                       className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white"
                     >
                       完了

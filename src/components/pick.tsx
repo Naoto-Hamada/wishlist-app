@@ -128,7 +128,14 @@ function ItemsArea({ items, isSelected, onMove }: ItemsAreaProps) {
         {isSelected ? '選んだもの' : 'やりたいことリスト'} 
         {isSelected && `(${items.length}/5)`}
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6
+        grid-cols-2 
+        sm:grid-cols-3 
+        md:grid-cols-4 
+        lg:grid-cols-5 
+        xl:grid-cols-6 
+        max-w-[2000px] mx-auto"
+      >
         {items.map((item) => (
           <WishItemCard
             key={item.base_wish_id}

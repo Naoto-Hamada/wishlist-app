@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Pen, Check } from 'lucide-react'
+import { getUserProfile } from '@/utils/supabaseFunctions'
+import { useSupabase } from '@/utils/supabaseFunctions'
+import { userprofile } from '@/utils/interface'
 
 const genres = [
   { category: "音楽", items: ["ポップ", "ロック", "ジャズ", "クラシック", "ヒップホップ"] },
@@ -24,18 +27,50 @@ type AuthProvider = 'email' | 'google' | 'both';
 
 export function Settings() {
   const [editing, setEditing] = useState<string | null>(null)
-  const [email, setEmail] = useState('user@example.com')
-  const [age, setAge] = useState('30')
-  const [gender, setGender] = useState('男性')
-  const [postalCode, setPostalCode] = useState('123-4567')
-  const [address, setAddress] = useState('東京都渋谷区')
+  const [email, setEmail] = useState('')
+  const [age, setAge] = useState('')
+  const [gender, setGender] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [address, setAddress] = useState('')
   const [interests, setInterests] = useState<string[]>([])
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isChanged, setIsChanged] = useState(false)
-  const [nickname, setNickname] = useState('ユーザー1')
+  const [nickname, setNickname] = useState('')
   const [authProvider, setAuthProvider] = useState<AuthProvider>('email')
+  const [userProfile, setUserProfile] = useState<userprofile | null>(null)
+
+  const supabase = useSupabase()
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const profile = await getUserProfile(user.id)
+        if (profile) {
+          setUserProfile(profile)
+          setEmail(user.email || '')
+          setNickname(profile.nickname || '')
+          setAge(profile.age?.toString() || '')
+          setGender(profile.gender || '')
+          setPostalCode(profile.postal_code || '')
+          setAddress(profile.address || '')
+          // interestsの設定は別途実装が必要です
+        }
+        // authProviderの設定
+        if (user.app_metadata.provider === 'google') {
+          setAuthProvider('google')
+        } else if (user.app_metadata.provider === 'email' && user.identities?.some(i => i.provider === 'google')) {
+          setAuthProvider('both')
+        } else {
+          setAuthProvider('email')
+        }
+      }
+    }
+
+    fetchUserProfile()
+  }, [])
 
   const handleEdit = (field: string) => {
     setEditing(editing === field ? null : field)

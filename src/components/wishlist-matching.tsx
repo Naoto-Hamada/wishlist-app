@@ -36,6 +36,9 @@ export function WishlistMatchingComponent() {
     cost: '',
   });
 
+  // 成功メッセージ用の新しいDialogを追加
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
   // 1. ユーザー情報取得時のログ
   useEffect(() => {
     async function fetchUser() {
@@ -203,7 +206,7 @@ export function WishlistMatchingComponent() {
       duration: customWish.duration,
       cost: Number(customWish.cost),
       base_wish_id: null,
-      customwish_image_url: null,
+      customwish_image_url: `https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`,
       user_id: user.id,
       status: 'やりたい',
       original_flag: 'original_flag'
@@ -217,8 +220,13 @@ export function WishlistMatchingComponent() {
       console.error('カスタムウィッシュの作成に失敗しました:', error);
     } else {
       console.log('カスタムウィッシュが正常に作成されました');
-      setShowCustomWishForm(false);
       setCustomWish({ title: '', detail: '', duration: '', cost: '' });
+      setShowSuccessDialog(true); // 成功メッセージダイアログを表示
+      
+      // 3秒後にダイアログを閉じる
+      setTimeout(() => {
+        setShowSuccessDialog(false);
+      }, 3000);
     }
   };
 
@@ -279,6 +287,23 @@ export function WishlistMatchingComponent() {
                 <p className="text-sm text-gray-500 mt-2">※あとで編集できます</p>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* 成功メッセージ用のDialog */}
+        <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+          <DialogContent className="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto">
+            <div className="text-center">
+              <div className="mb-4 bg-gradient-to-r from-teal-400 to-blue-500 p-3 rounded-full inline-flex">
+                <Check className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent mb-3">
+                やりたいことリストが登録されました！
+              </h3>
+              <div className="mt-6">
+                <div className="h-1 w-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full mx-auto"></div>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

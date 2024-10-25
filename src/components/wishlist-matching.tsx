@@ -87,14 +87,22 @@ export function WishlistMatchingComponent() {
       console.warn('ユーザーが見つかりません');
     }
 
-    // 次のカードへの移動
+    // 次のカードへの移動前に、これが最後のカードかチェック
+    const isLastCard = currentIndex === wishes.length - 1;
+
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % wishes.length)
-      setDirection(null)
-      api.start({ 
-        from: { x: 0, y: 0, rotation: 0, opacity: 0 },
-        to: { x: 0, y: 0, rotation: 0, opacity: 1 }
-      })
+      if (isLastCard) {
+        // 最後のカードの場合は、ページをリロード
+        window.location.reload();
+      } else {
+        // 通常の次のカードへの移動処理
+        setCurrentIndex((prev) => (prev + 1) % wishes.length)
+        setDirection(null)
+        api.start({ 
+          from: { x: 0, y: 0, rotation: 0, opacity: 0 },
+          to: { x: 0, y: 0, rotation: 0, opacity: 1 }
+        })
+      }
     }, 300)
   }
 
@@ -385,3 +393,4 @@ const handleCustomWishSubmit = async (e: React.FormEvent) => {
     console.warn('ユーザーが見つかりません');
   }
 };
+

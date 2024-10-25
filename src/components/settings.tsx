@@ -12,6 +12,7 @@ import { Pen, Check } from 'lucide-react'
 import { getUserProfile } from '@/utils/supabaseFunctions'
 import { useSupabase } from '@/utils/supabaseFunctions'
 import { userprofile } from '@/utils/interface'
+import { updateUserProfile } from '@/utils/supabaseFunctions'
 
 const genres = [
   { category: "音楽", items: ["ポップ", "ロック", "ジャズ", "クラシック", "ヒップホップ"] },
@@ -91,7 +92,9 @@ export function Settings() {
   const handleSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('ユーザーが見つかりませ')
+      console.log('Current user:', user) // ユーザー情報の確認
+
+      if (!user) throw new Error('ユーザーが見つかりません')
 
       // パスワード変更の処理
       if (editing === 'password' && authProvider !== 'google') {
@@ -104,9 +107,8 @@ export function Settings() {
         if (passwordError) throw passwordError
       }
 
-      // プロフィール情報の更新（テーブル名を修正）
-      const updates = {
-        id: user.id,
+      // プロフィール情報の更新
+      const updates: Partial<userprofile> = {
         nickname: nickname === '（未入力）' ? null : nickname,
         age: age === '（未入力）' ? null : parseInt(age),
         gender: gender === '（未入力）' ? null : gender,
@@ -114,11 +116,10 @@ export function Settings() {
         address: address === '（未入力）' ? null : address,
         updated_at: new Date().toISOString()
       }
+      console.log('Updates to be sent:', updates) // 更新データの確認
 
-      const { error } = await supabase
-        .from('userprofile')  // テーブル名を修正
-        .update(updates)
-        .eq('id', user.id)
+      const { data, error } = await updateUserProfile(user.id, updates)
+      console.log('Update response:', { data, error }) // レスポンスの確認
 
       if (error) throw error
 
@@ -151,7 +152,7 @@ export function Settings() {
       alert('設定を更新しました')
 
     } catch (error) {
-      console.error('Error updating profile:', error)
+      console.error('Detailed error:', error) // エラーの詳細を確認
       alert('設定の更新に失敗しました: ' + (error as Error).message)
     }
   }

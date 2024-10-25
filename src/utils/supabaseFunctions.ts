@@ -75,3 +75,25 @@ export async function getCurrentUser() {
     return { user: null, error }
   }
 }
+
+// プロフィール更新用の関数を追加
+export async function updateUserProfile(userId: string, updates: Partial<userprofile>) {
+  try {
+    console.log('Updating profile for user:', userId)
+    console.log('Update payload:', updates)
+
+    const { data, error } = await supabase
+      .from('userprofile')
+      .update(updates)
+      .eq('id', userId)  // user_id から id に修正
+      .select();
+
+    console.log('Supabase response:', { data, error })
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('プロフィール更新エラー:', error);
+    return { data: null, error };
+  }
+}

@@ -469,12 +469,14 @@ export function HomeWishCard({ wish, isUnknownDateCard = false, isAchievementCar
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="image">画像URL</Label>
+                    <Label htmlFor="image">
+                      画像URL（<a href="https://unsplash.com/ja" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 underline">画像を探す</a>）
+                    </Label>
                     <Input
                       id="image"
                       type="url"
                       value={editForm.customwish_image_url}
-                      onChange={(e) => setEditForm({ ...editForm, customwish_image_url: e.target.value })}
+                      onChange={(e) => setEditForm({ ...prev, customwish_image_url: e.target.value })}
                       placeholder="https://..."
                     />
                   </div>

@@ -43,6 +43,7 @@ export function WishlistDetailComponent() {
   const [achievementDate, setAchievementDate] = useState<Date>()
   const [thoughts, setThoughts] = useState("")
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showLoadingDialog, setShowLoadingDialog] = useState(false);
 
   useEffect(() => {
     async function fetchWishlistItems() {
@@ -189,8 +190,14 @@ export function WishlistDetailComponent() {
   const handleAIButtonClick = async () => {
     if (!selectedItem) return;
 
+    // ローディングダイアログを表示
+    setShowLoadingDialog(true);
+
     const { user } = await getCurrentUser();
-    if (!user) return;
+    if (!user) {
+      setShowLoadingDialog(false);
+      return;
+    }
 
     try {
       const userProfile = await getUserProfile(user.id);
@@ -234,6 +241,9 @@ export function WishlistDetailComponent() {
       }
     } catch (error) {
       console.error('AI Button Click Error:', error);
+    } finally {
+      // 処理完了時にローディングダイアログを非表示
+      setShowLoadingDialog(false);
     }
   };
 
@@ -392,7 +402,7 @@ export function WishlistDetailComponent() {
                           value={editedItem?.actionPlan}
                           onChange={(e) => handleInputChange('actionPlan', e.target.value)}
                           className="w-full min-h-[150px] border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg font-mono"
-                          placeholder="具���的な動計画を力&#10;（ークダウン形式で記述可能）"
+                          placeholder="具的な動計画を力&#10;（ークダウン形式で記述可能）"
                         />
                       </div>
                     </div>
@@ -510,6 +520,28 @@ export function WishlistDetailComponent() {
                 <div className="mt-6">
                   <div className="h-1 w-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full mx-auto"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ローディングダイアログ */}
+      {showLoadingDialog && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black bg-opacity-50" />
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 relative">
+            <div className="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto">
+              <div className="text-center">
+                <div className="mb-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  AIが考え中...
+                </h3>
+                <p className="text-gray-600">
+                  出力には1分程時間がかかります
+                </p>
               </div>
             </div>
           </div>

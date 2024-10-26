@@ -402,7 +402,7 @@ export function WishlistDetailComponent() {
                           value={editedItem?.actionPlan}
                           onChange={(e) => handleInputChange('actionPlan', e.target.value)}
                           className="w-full min-h-[150px] border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg font-mono"
-                          placeholder="具的な動計画を力&#10;（ークダウン形式で記述可能）"
+                          placeholder="具体的な行動計画を記述"
                         />
                       </div>
                     </div>
@@ -426,13 +426,13 @@ export function WishlistDetailComponent() {
 
               <div>
                 <h3 className="font-semibold mb-2">ゴール:</h3>
-                <ReactMarkdown className="prose prose-sm max-w-none">
+                <ReactMarkdown className="prose prose-sm max-w-none" breaks={true}>
                   {selectedItem?.goal || 'ゴールが設定されていません'}
                 </ReactMarkdown>
               </div>
               <div>
                 <h3 className="font-semibold mb-2">アクションプラン:</h3>
-                <ReactMarkdown className="prose prose-sm max-w-none">
+                <ReactMarkdown className="prose prose-sm max-w-none" breaks={true}>
                   {selectedItem?.actionPlan || 'アクションプランが設定されていません'}
                 </ReactMarkdown>
               </div>

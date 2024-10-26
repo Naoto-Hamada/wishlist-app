@@ -32,18 +32,43 @@ export function HomeComponent() {
   const [chartData, setChartData] = useState([])
   const [recentWishes, setRecentWishes] = useState<WishCustom[]>([])
   const [user, setUser] = useState<any>(null)
+  // 達成状況の状態を追加
+  const [achievements, setAchievements] = useState({
+    total: 0,
+    thisYear: 0
+  })
 
-  // ユーザー情報と直近やりたいことの取得
+  // ユーザー情報と達成状況の取得を統合
   useEffect(() => {
-    async function fetchUserAndWishes() {
+    async function fetchUserAndData() {
       const { user } = await getCurrentUser()
       if (user) {
         setUser(user)
-        const { data } = await getWishesByStatus(user.id, '直近やりたい')
-        if (data) setRecentWishes(data)
+        // 直近やりたいことの取得
+        const { data: recentData } = await getWishesByStatus(user.id, '直近やりたい')
+        if (recentData) setRecentWishes(recentData)
+
+        // 達成状況の取得
+        const { data: achievedWishes } = await getWishesByStatus(user.id, 'やったことある')
+        if (achievedWishes) {
+          // 累計数の計算
+          const total = achievedWishes.length
+
+          // 今年の達成数の計算
+          const currentYear = new Date().getFullYear()
+          const thisYear = achievedWishes.filter(wish => {
+            const achievementDate = new Date(wish.achievement_date)
+            return achievementDate.getFullYear() === currentYear
+          }).length
+
+          setAchievements({
+            total,
+            thisYear
+          })
+        }
       }
     }
-    fetchUserAndWishes()
+    fetchUserAndData()
   }, [])
 
   useEffect(() => {
@@ -100,11 +125,11 @@ export function HomeComponent() {
           <div className="bg-white p-4 rounded-lg shadow-sm border border-cyan-100 flex justify-around items-center">
             <div className="text-center">
               <p className="text-sm text-gray-500">累計</p>
-              <p className="text-3xl font-bold text-teal-600">62<span className="text-base font-normal">個</span></p>
+              <p className="text-3xl font-bold text-teal-600">{achievements.total}<span className="text-base font-normal">個</span></p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500">今年</p>
-              <p className="text-3xl font-bold text-blue-600">23<span className="text-base font-normal">個</span></p>
+              <p className="text-3xl font-bold text-blue-600">{achievements.thisYear}<span className="text-base font-normal">個</span></p>
             </div>
           </div>
         </section>

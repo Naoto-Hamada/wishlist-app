@@ -34,8 +34,6 @@ export function WishItemCard({ wish, isSelected, onMove }: WishItemCardProps) {
     cost: (wish.cost ?? 0).toString(), // デフォルト値を設定
     customwish_image_url: wish.customwish_image_url
   })
-  const [isCompleting, setIsCompleting] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const defaultImageUrl = 'https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
 
@@ -60,30 +58,6 @@ export function WishItemCard({ wish, isSelected, onMove }: WishItemCardProps) {
       window.location.reload()
     }
   }
-
-  const handleComplete = async () => {
-    try {
-      setIsCompleting(true);
-      const { error } = await markWishAsCompleted(wish.custom_wish_id);
-      
-      if (error) {
-        console.error('達成の更新に失敗しました:', error);
-        return;
-      }
-
-      setShowSuccessDialog(true);
-      
-      // 3秒後に成功メッセージを閉じてページをリロード
-      setTimeout(() => {
-        setShowSuccessDialog(false);
-        window.location.reload();
-      }, 3000);
-    } catch (error) {
-      console.error('達成の更新中にエラーが発生しました:', error);
-    } finally {
-      setIsCompleting(false);
-    }
-  };
 
   return (
     <>
@@ -115,176 +89,148 @@ export function WishItemCard({ wish, isSelected, onMove }: WishItemCardProps) {
 
       {/* メインのDialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          {isEditing ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold">
-                  やりたいことを編集
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleEditSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">タイトル</Label>
-                    <Input
-                      id="title"
-                      type="text"
-                      value={editForm.title}
-                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                      placeholder="タイトル"
-                    />
-                  </div>
+        <DialogContent className="!p-0">
+          <div className="bg-white rounded-lg overflow-hidden">
+            {isEditing ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">
+                    やりたいことを編集
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleEditSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">タイトル</Label>
+                      <Input
+                        id="title"
+                        type="text"
+                        value={editForm.title}
+                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                        placeholder="タイトル"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="detail">詳細</Label>
-                    <Textarea
-                      id="detail"
-                      value={editForm.detail}
-                      onChange={(e) => setEditForm({ ...editForm, detail: e.target.value })}
-                      placeholder="詳細"
-                      className="min-h-[100px]"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="detail">詳細</Label>
+                      <Textarea
+                        id="detail"
+                        value={editForm.detail}
+                        onChange={(e) => setEditForm({ ...editForm, detail: e.target.value })}
+                        placeholder="詳細"
+                        className="min-h-[100px]"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">所要時間</Label>
-                    <Input
-                      id="duration"
-                      type="text"
-                      value={editForm.duration}
-                      onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
-                      placeholder="例: 2時間"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="duration">所要時間</Label>
+                      <Input
+                        id="duration"
+                        type="text"
+                        value={editForm.duration}
+                        onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
+                        placeholder="例: 2時間"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="cost">予算</Label>
-                    <Input
-                      id="cost"
-                      type="number"
-                      value={editForm.cost}
-                      onChange={(e) => setEditForm({ ...editForm, cost: e.target.value })}
-                      placeholder="¥0"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cost">予算</Label>
+                      <Input
+                        id="cost"
+                        type="number"
+                        value={editForm.cost}
+                        onChange={(e) => setEditForm({ ...editForm, cost: e.target.value })}
+                        placeholder="¥0"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="image">画像URL（<a href="https://unsplash.com/ja" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 underline">画像を探す</a>）</Label>
-                    <Input
-                      id="image"
-                      type="url"
-                      value={editForm.customwish_image_url}
-                      onChange={(e) => setEditForm({ ...editForm, customwish_image_url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </div>
-                </form>
-              </CardContent>
-              <CardFooter className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditing(false)
-                    setEditForm({
-                      title: wish.title,
-                      detail: wish.detail,
-                      duration: wish.duration,
-                      cost: wish.cost.toString(),
-                      customwish_image_url: wish.customwish_image_url
-                    })
-                  }}
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  onClick={handleEditSubmit}
-                  className="bg-gradient-to-r from-teal-400 to-blue-500 text-white"
-                >
-                  保存
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : (
-            <>
-              <div className="relative w-full" style={{ paddingBottom: '61.8%' }}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsEditing(true)
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 z-10 transition-opacity"
-                >
-                  <Pen className="w-4 h-4 text-gray-600" />
-                </button>
-                <Image
-                  src={wish.customwish_image_url || defaultImageUrl}
-                  alt={wish.title}
-                  fill
-                  className="rounded-t-lg object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = defaultImageUrl
-                  }}
-                />
-              </div>
-              
-              <div className="p-4">
-                <DialogTitle className="text-lg font-semibold mb-3">{wish.title}</DialogTitle>
-                <div className="text-sm text-gray-600 space-y-2">
-                  <p>所要時間: {wish.duration}</p>
-                  <p>費用: ¥{(wish.cost ?? 0).toLocaleString()}</p>
-                  {wish.detail && <p className="mt-2">{wish.detail}</p>}
-                </div>
-
-                <div className="flex gap-2 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="image">画像URL（<a href="https://unsplash.com/ja" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 underline">画像を探す</a>）</Label>
+                      <Input
+                        id="image"
+                        type="url"
+                        value={editForm.customwish_image_url}
+                        onChange={(e) => setEditForm({ ...editForm, customwish_image_url: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </form>
+                </CardContent>
+                <CardFooter className="flex justify-end space-x-2">
                   <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false)
+                      setEditForm({
+                        title: wish.title,
+                        detail: wish.detail,
+                        duration: wish.duration,
+                        cost: wish.cost.toString(),
+                        customwish_image_url: wish.customwish_image_url
+                      })
+                    }}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    onClick={handleEditSubmit}
+                    className="bg-gradient-to-r from-teal-400 to-blue-500 text-white"
+                  >
+                    保存
+                  </Button>
+                </CardFooter>
+              </Card>
+            ) : (
+              <>
+                <div className="relative w-full bg-white" style={{ paddingBottom: '61.8%' }}>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      onMove(wish, !isSelected)
-                      setIsOpen(false)
+                      setIsEditing(true)
                     }}
-                    variant="outline"
-                    className="flex-1"
+                    className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 z-10 transition-opacity"
                   >
-                    {isSelected ? '選択を解除' : '直近やりたい'}
-                  </Button>
-                  
-                  <Button
-                    onClick={handleComplete}
-                    disabled={isCompleting}
-                    className="flex-1 bg-gradient-to-r from-teal-400 to-blue-500 text-white"
-                  >
-                    {isCompleting ? '更新中...' : '達成する'}
-                  </Button>
+                    <Pen className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <Image
+                    src={wish.customwish_image_url || defaultImageUrl}
+                    alt={wish.title}
+                    fill
+                    className="rounded-t-lg object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = defaultImageUrl
+                    }}
+                  />
                 </div>
-              </div>
-            </>
-          )}
+                
+                <div className="p-4 bg-white">
+                  <DialogTitle className="text-lg font-semibold mb-3">{wish.title}</DialogTitle>
+                  <div className="text-sm text-gray-600 space-y-2">
+                    <p>所要時間: {wish.duration}</p>
+                    <p>費用: ¥{(wish.cost ?? 0).toLocaleString()}</p>
+                    {wish.detail && <p className="mt-2">{wish.detail}</p>}
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onMove(wish, !isSelected)
+                        setIsOpen(false)
+                      }}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {isSelected ? '選択を解除' : '直近やりたい'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
-
-      {/* 成功メッセージのDialog */}
-      {showSuccessDialog && (
-        <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-          <DialogContent className="sm:max-w-md">
-            <div className="text-center">
-              <div className="mb-4 bg-gradient-to-r from-teal-400 to-blue-500 p-3 rounded-full inline-flex">
-                <Check className="w-6 h-6 text-white" />
-              </div>
-              <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent mb-3">
-                おめでとうございます！
-              </DialogTitle>
-              <p className="text-gray-600 mb-3">
-                やりたいことを達成しました！
-              </p>
-              <div className="mt-6">
-                <div className="h-1 w-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full mx-auto"></div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </>
   )
 }

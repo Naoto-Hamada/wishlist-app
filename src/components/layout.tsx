@@ -269,7 +269,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* フッター */}
         <footer className="bg-gray-800 text-white p-4 text-center fixed bottom-0 left-0 right-0 z-20">
-          <p>&copy;  2024 ゆめマッチ. All rights reserved.</p>
+          <p>&copy; 2024 ゆめマッチ. All rights reserved.</p>
         </footer>
       </div>
     </SessionContextProvider>

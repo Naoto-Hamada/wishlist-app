@@ -41,23 +41,21 @@ export function useSupabase() {
   return supabase
 }
 
-// Settingsにuserprofileを表示するため、userprofileDBからデータ取得する関数
+// Settingsにuserprofileを表示するため、userprofileDBからデータ得する関数
 
-export async function getUserProfile(userId: string): Promise<userprofile | null> {
-  try {
-    const { data, error } = await supabase
-      .from('userprofile')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+export async function getUserProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('userprofile')
+    .select('address, age, gender')
+    .eq('id', userId) // 'id'を使用
+    .single();
 
-    if (error) throw error;
-
-    return data;
-  } catch (error) {
-    console.error('ユーザープロファイル取得エラー:', error);
-    return null;
+  if (error) {
+    console.error('ユーザープロファイルの取得に失敗しました:', error);
+    throw error;
   }
+
+  return data;
 }
 
 export async function getCurrentSession() {

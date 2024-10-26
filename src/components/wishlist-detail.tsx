@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { getCurrentUser, getWishesByStatus, updateCustomWish } from '@/utils/supabaseFunctions'
+import { getCurrentUser, getWishesByStatus, updateCustomWish, getUserProfile } from '@/utils/supabaseFunctions'
 import ReactMarkdown from 'react-markdown'
 import { WishCustom } from '@/utils/interface'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -20,6 +20,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
 import { ja } from "date-fns/locale" // 日本語ローカライズ
 import { Check } from 'lucide-react'
+import { sendToDify } from '@/utils/dify'
 
 interface WishlistItem {
   id: string;
@@ -185,6 +186,57 @@ export function WishlistDetailComponent() {
     }
   };
 
+  const handleAIButtonClick = async () => {
+    if (!selectedItem) return;
+
+    const { user } = await getCurrentUser();
+    if (!user) return;
+
+    try {
+      const userProfile = await getUserProfile(user.id);
+      if (!userProfile) {
+        console.error('ユーザープロファイルが見つかりません');
+        return;
+      }
+
+      const dataToSend = {
+        inputs: {
+          title: selectedItem.title,
+          detail: selectedItem.description,
+          goal: selectedItem.goal || "",
+          action: selectedItem.actionPlan || "",
+          address: userProfile.address,
+          age: userProfile.age,
+          gender: userProfile.gender
+        }
+      };
+
+      const { goal, action } = await sendToDify(dataToSend);
+
+      if (goal || action) {
+        const updateData = {
+          goal: goal,
+          action: action,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await updateCustomWish(selectedItem.id, updateData);
+
+        if (error) {
+          console.error('データベース更新エラー:', error);
+          return;
+        }
+
+        setShowCompletionDialog(true);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('AI Button Click Error:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F3F4F6] p-4 md:p-8">
       <div className="mb-8 overflow-x-auto">
@@ -244,7 +296,7 @@ export function WishlistDetailComponent() {
                 <Button 
                   variant="default" 
                   className="flex items-center gap-2 bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600"
-                  onClick={() => {/* AIで具体化する処理 */}}
+                  onClick={handleAIButtonClick} // ここで関数を呼び出す
                 >
                   <Sparkles className="h-4 w-4 text-white" />
                   <span className="text-white">AIで具体化</span>
@@ -340,7 +392,7 @@ export function WishlistDetailComponent() {
                           value={editedItem?.actionPlan}
                           onChange={(e) => handleInputChange('actionPlan', e.target.value)}
                           className="w-full min-h-[150px] border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg font-mono"
-                          placeholder="具体的な行動計画を入力&#10;（マークダウン形式で記述可能）"
+                          placeholder="具���的な動計画を力&#10;（ークダウン形式で記述可能）"
                         />
                       </div>
                     </div>
@@ -391,7 +443,7 @@ export function WishlistDetailComponent() {
                       おめでとうございます！🎉
                     </DialogTitle>
                     <DialogDescription>
-                      達成した日付と感想を記録しましょう
+                      達成た日付と感想を記録しましょう
                     </DialogDescription>
                   </DialogHeader>
 
@@ -418,7 +470,7 @@ export function WishlistDetailComponent() {
                         value={thoughts}
                         onChange={(e) => setThoughts(e.target.value)}
                         className="w-full min-h-[150px] border-gray-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg"
-                        placeholder="達成してみてどうでしたか？"
+                        placeholder="達成してみてうでしたか？"
                       />
                     </div>
                   </div>
@@ -450,8 +502,11 @@ export function WishlistDetailComponent() {
                   <Check className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent mb-3">
-                  お疲れさまでした！この調子で行きましょう！
+                  AIが新しい提案を生成しました！
                 </h3>
+                <p className="text-gray-600 mb-4">
+                  ゴールとアクションプランが更新されました。
+                </p>
                 <div className="mt-6">
                   <div className="h-1 w-16 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full mx-auto"></div>
                 </div>

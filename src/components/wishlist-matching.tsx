@@ -6,7 +6,7 @@ import { useSpring, animated } from '@react-spring/web'
 import { ThumbsUp, ThumbsDown, Check, ChevronLeft, ChevronDown, ChevronRight, Info, Undo2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { WishBase } from '@/utils/interface'
-import { getUnratedBaseWishes, createCustomWish, getCurrentUser, deleteCustomWish } from '@/utils/supabaseFunctions'
+import { getUnratedBaseWishes, createCustomWish, getCurrentUser, deleteCustomWish, createBaseToCustomWish } from '@/utils/supabaseFunctions'
 
 export function WishlistMatchingComponent() {
   const [wishes, setWishes] = useState<WishBase[]>([])
@@ -81,21 +81,36 @@ export function WishlistMatchingComponent() {
     }
 
     // カスタムウィッシュの作成
-    if (user) {
+    if (user && currentItem) {
       const status = dir === 'left' ? 'やりたい' :
                     dir === 'down' ? '興味はない' :
                     'やったことある';
       
       console.log('Creating custom wish with status:', status);
       
-      const { error } = await createCustomWish(currentItem, user.id, status);
+      const customWishData = {
+        title: currentItem.title,
+        detail: currentItem.detail,
+        duration: currentItem.duration,
+        cost: currentItem.cost,
+        base_wish_id: currentItem.base_wish_id,
+        image_url: currentItem.basewish_image_url,
+        user_id: user.id,
+        status: status,
+        original_flag: false
+      };
+
+      console.log('送信データ:', customWishData);
+
+      const { error } = await createBaseToCustomWish(customWishData);
       if (error) {
         console.error('カスタムウィッシュの作成に失敗しました:', error);
+        console.error('エラーの詳細:', error.message);
       } else {
         console.log('カスタムウィッシュが正常に作成されました');
       }
     } else {
-      console.warn('ユーザーが見つかりません');
+      console.warn('ユーザーまたは現在のアイテムが見つかりません');
     }
 
     // 次のカードへの移動前に、これが最後のカードかチェック
@@ -191,25 +206,22 @@ export function WishlistMatchingComponent() {
   const handleCustomWishSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('=== フォーム送信 ===');
-    console.log('送信時のユーザー状態:', user);
-    console.log('フォームデータ:', customWish);
-    
     if (!user) {
       console.error('ユーザーが見つかりません');
       return;
     }
     
-    const customWishData: Partial<WishCustom> = {
+    const customWishData = {
       title: customWish.title,
       detail: customWish.detail,
       duration: customWish.duration,
       cost: Number(customWish.cost),
       base_wish_id: null,
+      // basewish_image_urlをcustomwish_image_urlに変更
       customwish_image_url: `https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`,
       user_id: user.id,
       status: 'やりたい',
-      original_flag: 'original_flag'
+      original_flag: true  // 'original_flag'文字列ではなくブーリアン値に変更
     };
     
     console.log('送信データ:', customWishData);
@@ -426,10 +438,10 @@ function Card({ item }: { item: WishBase }) {
     <div className="bg-white rounded-xl shadow-md overflow-hidden h-full">
       <div className="relative h-64">
         <Image
-          src={item.basewish_image_url}
+          src={item.basewish_image_url || 'https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
           alt={item.title}
-          layout="fill"
-          objectFit="cover"
+          fill
+          className="object-cover"
         />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
           <h2 className="text-white text-xl font-bold">{item.title}</h2>

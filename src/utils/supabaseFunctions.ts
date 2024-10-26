@@ -254,3 +254,35 @@ export async function updateCustomWish(customWishId: string, updates: Partial<Wi
     return { data: null, error };
   }
 }
+
+// 新しい関数を追加
+export async function createBaseToCustomWish(wishData: any) {
+  try {
+    console.log('Creating base to custom wish with data:', wishData);
+    
+    const { data, error } = await supabase
+      .from('WishCustom')
+      .insert([
+        {
+          title: wishData.title,
+          detail: wishData.detail,
+          duration: wishData.duration,
+          cost: wishData.cost,
+          base_wish_id: wishData.base_wish_id,
+          customwish_image_url: wishData.image_url, // image_urlをcustomwish_image_urlに変更
+          user_id: wishData.user_id,
+          status: wishData.status,
+          original_flag: wishData.original_flag
+        }
+      ])
+      .select();
+
+    console.log('Supabase response:', { data, error });
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('createBaseToCustomWish error:', error);
+    return { data: null, error };
+  }
+}

@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { WishCustom } from '@/utils/interface'
 import { useState } from 'react'
-import { Pen, Trophy } from 'lucide-react'
+import { Pen, Trophy, Sparkles, Clock, Wallet } from 'lucide-react'
 import { updateCustomWish } from '@/utils/supabaseFunctions'
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,6 +20,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import ReactMarkdown from 'react-markdown'
+import { Separator } from "@/components/ui/separator"
 
 interface HomeWishCardProps {
   wish: WishCustom
@@ -98,8 +99,10 @@ export function HomeWishCard({ wish }: HomeWishCardProps) {
               target.src = defaultImageUrl
             }}
           />
-          <div className="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-50 text-white rounded-b-lg">
-            <h3 className="text-sm font-medium truncate">{wish.title}</h3>
+          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 py-1.5">
+            <h3 className="text-white font-medium text-sm px-2 truncate">
+              {wish.title}
+            </h3>
           </div>
         </div>
       </div>
@@ -231,29 +234,46 @@ export function HomeWishCard({ wish }: HomeWishCardProps) {
                     target.src = defaultImageUrl
                   }}
                 />
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 py-1.5">
+                  <div className="flex flex-wrap items-center justify-start gap-2 px-2">
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-white/20 backdrop-blur-sm">
+                      <Clock className="w-4 h-4 mr-1 text-white" />
+                      <span className="text-white font-medium text-sm">{wish.duration}</span>
+                    </div>
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-white/20 backdrop-blur-sm">
+                      <Wallet className="w-4 h-4 mr-1 text-white" />
+                      <span className="text-white font-medium text-sm">¥{wish.cost.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
               
-              <div className="p-4 space-y-4">
-                <DialogTitle className="text-lg font-semibold">{wish.title}</DialogTitle>
-                
-                <div className="text-sm text-gray-600 space-y-4">
-                  <p className="mt-2">{wish.detail}</p>
-                  <p>所要時間: {wish.duration}</p>
-                  <p>費用: ¥{wish.cost.toLocaleString()}</p>
-                  
-                  {wish.goal && (
-                    <div>
-                      <h4 className="font-semibold mb-1">ゴール:</h4>
-                      <ReactMarkdown className="prose prose-sm max-w-none">
-                        {wish.goal}
-                      </ReactMarkdown>
-                    </div>
-                  )}
+              <div className="p-4 space-y-3">
+                <div className="space-y-2">
+                  <DialogTitle className="text-lg font-semibold mb-1">{wish.title}</DialogTitle>
+                  <p className="text-sm text-gray-600">{wish.detail}</p>
                 </div>
+                
+                {wish.goal && (
+                  <div className="mt-4">
+                    <Card className="bg-gradient-to-r from-teal-50 to-blue-50 border-none shadow-sm">
+                      <div className="p-3 space-y-2">
+                        <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-gradient-to-r from-teal-400 to-blue-500 w-fit">
+                          <span className="text-white font-medium text-sm">ゴール</span>
+                        </div>
+                        <ReactMarkdown 
+                          className="prose prose-sm max-w-none text-gray-600 prose-p:my-1 prose-headings:my-2"
+                        >
+                          {wish.goal}
+                        </ReactMarkdown>
+                      </div>
+                    </Card>
+                  </div>
+                )}
 
                 <Button
                   onClick={() => setIsAchievedDialogOpen(true)}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 rounded-lg"
+                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 rounded-lg mt-2"
                 >
                   <Trophy className="w-5 h-5 mr-2" />
                   達成！
@@ -268,7 +288,7 @@ export function HomeWishCard({ wish }: HomeWishCardProps) {
         <DialogContent className="sm:max-w-[500px] bg-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              おめでとうございます！🎉
+              おめでうございます！🎉
             </DialogTitle>
             <DialogDescription>
               達成した日付と感想を記録しましょう

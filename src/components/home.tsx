@@ -77,7 +77,7 @@ export function HomeComponent() {
         
         {/* 直近でやりたいこと */}
         <section className="mb-8 bg-white rounded-lg p-4 shadow-md">
-          <h2 className="text-xl font-semibold mb-4">直近でやりたいこと ({recentWishes.length}/5)</h2>
+          <h2 className="text-xl font-semibold mb-4">直近でやりたいこと</h2>
           <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6
             grid-cols-2 
             sm:grid-cols-3 

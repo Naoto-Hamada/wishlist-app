@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Home, List, Calendar, Settings, ChevronRight, Info } from "lucide-react"
+import { WishCustom } from '@/utils/interface'
+import { HomeWishCard } from './home-wish-card.tsx'  // 新しいコンポーネントをインポート
+import { getCurrentUser, getWishesByStatus } from '@/utils/supabaseFunctions'
 
 // 仮のデータ生成関数
 const generateData = (months: number) => {
@@ -23,19 +26,25 @@ const generateAchievements = (count: number) => {
   return Array.from({ length: count }, (_, i) => `実現したこと${i + 1}`)
 }
 
-const recentTasks = [
-  { id: 1, title: "新しい言語を学ぶ" },
-  { id: 2, title: "ヨガを始める" },
-  { id: 3, title: "料理スキルを向上させる" },
-  { id: 4, title: "写真撮影技術を磨く" },
-  { id: 5, title: "ガーデニングを楽しむ" },
-]
-
-
 export function HomeComponent() {
   const [selectedPeriod, setSelectedPeriod] = useState("全期間")
   const [selectedMonth, setSelectedMonth] = useState(null)
   const [chartData, setChartData] = useState([])
+  const [recentWishes, setRecentWishes] = useState<WishCustom[]>([])
+  const [user, setUser] = useState<any>(null)
+
+  // ユーザー情報と直近やりたいことの取得
+  useEffect(() => {
+    async function fetchUserAndWishes() {
+      const { user } = await getCurrentUser()
+      if (user) {
+        setUser(user)
+        const { data } = await getWishesByStatus(user.id, '直近やりたい')
+        if (data) setRecentWishes(data)
+      }
+    }
+    fetchUserAndWishes()
+  }, [])
 
   useEffect(() => {
     const periods = {
@@ -56,25 +65,33 @@ export function HomeComponent() {
     console.log(`${data.month}の実現したこと: ${data.count}個`)
   }
 
+  // onMoveハンドラーを追加
+  const handleMove = async (item: WishCustom, toSelected: boolean) => {
+    // この関数は必要に応じて実装
+    console.log('Move handler called', item, toSelected)
+  }
+
   return (
     <div className="min-h-screen bg-[#F3F4F6] pb-8">
       <div className="container mx-auto px-4 py-8">
         
         {/* 直近でやりたいこと */}
         <section className="mb-8 bg-white rounded-lg p-4 shadow-md">
-          <h2 className="text-xl font-semibold mb-4">直近でやりたいこと</h2>
-          <ul className="space-y-2">
-            {recentTasks.map((task) => (
-              <li
-                key={task.id}
-                className="bg-white p-3 rounded-lg shadow-sm border border-cyan-100 hover:bg-alice-blue transition-colors duration-200 flex justify-between items-center cursor-pointer"
-                onClick={() => handleTaskClick(task.id)}
-              >
-                <span>{task.title}</span>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
-              </li>
+          <h2 className="text-xl font-semibold mb-4">直近でやりたいこと ({recentWishes.length}/5)</h2>
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6
+            grid-cols-2 
+            sm:grid-cols-3 
+            md:grid-cols-4 
+            lg:grid-cols-5 
+            max-w-[2000px] mx-auto"
+          >
+            {recentWishes.map((wish) => (
+              <HomeWishCard
+                key={wish.custom_wish_id}
+                wish={wish}
+              />
             ))}
-          </ul>
+          </div>
         </section>
 
         {/* 達成状況 */}

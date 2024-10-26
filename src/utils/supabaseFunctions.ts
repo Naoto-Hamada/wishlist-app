@@ -286,3 +286,61 @@ export async function createBaseToCustomWish(wishData: any) {
     return { data: null, error };
   }
 }
+
+export async function getMonthlyAchievements(userId: string, months: number | null) {
+  try {
+    const { data, error } = await supabase
+      .from('WishCustom')
+      .select('achievement_date')
+      .eq('user_id', userId)
+      .eq('status', 'やったことある')
+      .not('achievement_date', 'is', null)
+      .order('achievement_date', { ascending: true });
+
+    if (error) throw error;
+
+    // データが存在しない場合
+    if (!data || data.length === 0) {
+      return { data: [], error: null };
+    }
+
+    // 月別の集計を行う
+    const monthlyData = new Map();
+    const currentDate = new Date();
+    
+    if (months === null) {
+      // 全期間の場合、最古のデータから現在までを対象とする
+      const oldestDate = new Date(data[0].achievement_date);
+      const monthDiff = (currentDate.getFullYear() - oldestDate.getFullYear()) * 12 
+                       + (currentDate.getMonth() - oldestDate.getMonth());
+      months = monthDiff + 1;
+    }
+
+    // 月表示のフォーマットを修正
+    for (let i = 0; i < months; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const key = `${date.getFullYear()}/${date.getMonth() + 1}`; // フォーマットを簡略化
+      monthlyData.set(key, 0);
+    }
+
+    // 実際のデータで集計時も同じフォーマットを使用
+    data.forEach(item => {
+      const date = new Date(item.achievement_date);
+      const key = `${date.getFullYear()}/${date.getMonth() + 1}`;
+      if (monthlyData.has(key)) {
+        monthlyData.set(key, monthlyData.get(key) + 1);
+      }
+    });
+
+    // Map を配列に変換
+    const result = Array.from(monthlyData.entries()).map(([month, count]) => ({
+      month,
+      count
+    }));
+
+    return { data: result.reverse(), error: null };
+  } catch (error) {
+    console.error('月別達成データ取得エラー:', error);
+    return { data: null, error };
+  }
+}

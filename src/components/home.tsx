@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts"
 import { Home, List, Calendar, Settings, ChevronRight, Info } from "lucide-react"
 import { WishCustom } from '@/utils/interface'
 import { HomeWishCard } from './home-wish-card.tsx'  // 新しいコンポーネントをインポート
-import { getCurrentUser, getWishesByStatus } from '@/utils/supabaseFunctions'
+import { getCurrentUser, getWishesByStatus, getMonthlyAchievements } from '@/utils/supabaseFunctions'
 
 // 仮のデータ生成関数
 const generateData = (months: number) => {
@@ -76,18 +76,42 @@ export function HomeComponent() {
       "1ヶ月": 1,
       "3ヶ月": 3,
       "1年": 12,
-      "全期間": 24 // 仮に2年分のデータを「全期間」とする
+      "全期間": null  // nullを渡すことで、関数側で全期間を計算
     }
-    setChartData(generateData(periods[selectedPeriod]))
-  }, [selectedPeriod])
+
+    async function fetchAchievementData() {
+      const { data } = await getMonthlyAchievements(user?.id, periods[selectedPeriod]);
+      if (data) {
+        setChartData(data);
+      }
+    }
+
+    if (user) {
+      fetchAchievementData();
+    }
+  }, [selectedPeriod, user]);
 
   const handleTaskClick = (taskId) => {
     console.log(`タスク ${taskId} がクリックされました`)
   }
 
-  const handleBarClick = (data) => {
-    setSelectedMonth(data.month)
-    console.log(`${data.month}の実現したこと: ${data.count}個`)
+  const handleBarClick = async (data) => {
+    setSelectedMonth(data.month);
+    if (user) {
+      const [year, month] = data.month.replace('年', '/').replace('月', '').split('/');
+      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endDate = new Date(parseInt(year), parseInt(month), 0);
+
+      const { data: achievements } = await supabase
+        .from('WishCustom')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'やったことある')
+        .gte('achievement_date', startDate.toISOString())
+        .lte('achievement_date', endDate.toISOString());
+
+      setSelectedMonthAchievements(achievements || []);
+    }
   }
 
   // onMoveハンドラーを追加
@@ -138,9 +162,9 @@ export function HomeComponent() {
         <section className="bg-white rounded-lg p-4 shadow-md">
           <h2 className="text-xl font-semibold mb-4">過去の達成状況</h2>
           <div className="bg-white p-4 rounded-lg shadow-sm border border-cyan-100">
-            {/* 期間切り替えボタン */}
+            {/* 期間選択ボタン */}
             <div className="flex justify-center space-x-2 mb-4">
-              {["全期間", "1年", "3ヶ月", "1月"].map((period) => (
+              {["全期間", "1年", "3ヶ月"].map((period) => (
                 <button
                   key={period}
                   className={`px-3 py-1 rounded-full text-sm ${
@@ -156,32 +180,54 @@ export function HomeComponent() {
             </div>
 
             {/* 棒グラフ */}
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <div className="w-full h-[300px] px-4">
+              <ResponsiveContainer width="95%" height="100%">
+                <BarChart 
+                  data={chartData} 
+                  margin={{ top: 5, right: 5, left: 5, bottom: 25 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <XAxis 
+                    dataKey="month" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    hide={true}
+                  />
                   <Tooltip />
                   <Bar 
                     dataKey="count" 
                     fill="#008080" 
                     onClick={handleBarClick}
                     className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                  />
+                    barSize={60}
+                  >
+                    {/* 棒グラフ内に数値を表示 */}
+                    <LabelList
+                      dataKey="count"
+                      position="center"
+                      fill="white"
+                      formatter={(value) => value > 0 ? value : ''} // 0の場合は表示しない
+                      style={{ fontSize: '14px', fontWeight: 'bold' }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
-            {/* 実現したこと一覧表示エリア */}
+            {/* 実現したこと一覧表示エリアの修正 */}
             <div className="mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
               {selectedMonth ? (
                 <div>
                   <h3 className="text-lg font-semibold mb-2">{selectedMonth}の実現したこと一覧</h3>
                   <ul className="space-y-1 text-left">
-                    {generateAchievements(chartData.find(data => data.month === selectedMonth)?.count || 0).map((achievement, index) => (
-                      <li key={index} className="text-sm text-gray-600">
-                        {achievement}
+                    {selectedMonthAchievements.map((achievement) => (
+                      <li key={achievement.custom_wish_id} className="text-sm text-gray-600">
+                        {achievement.title}
                       </li>
                     ))}
                   </ul>

@@ -105,7 +105,7 @@ export function WishlistMatchingComponent() {
       const { error } = await createBaseToCustomWish(customWishData);
       if (error) {
         console.error('カスタムウィッシュの作成に失敗しました:', error);
-        console.error('エラーの詳細:', error.message);
+        console.error('エラーの詳細:', error instanceof Error ? error.message : '詳細情報なし');
       } else {
         console.log('カスタムウィッシュが正常に作成されました');
       }

@@ -165,10 +165,9 @@ export function HomeWishCard({ wish, isUnknownDateCard = false, isAchievementCar
               <div className="space-y-2">
                 <Label>達成日</Label>
                 <Calendar
-                  mode="single"
                   selected={achievementForm.achievement_date}
                   onSelect={(date) => setAchievementForm(prev => ({ ...prev, achievement_date: date }))}
-                  initialFocus
+                  mode="single"
                   className="rounded-md border"
                 />
               </div>
@@ -276,10 +275,8 @@ export function HomeWishCard({ wish, isUnknownDateCard = false, isAchievementCar
                 達成日
               </Label>
               <Calendar
-                mode="single"
                 selected={unknownDateForm.achievement_date}
                 onSelect={(date) => setUnknownDateForm(prev => ({ ...prev, achievement_date: date }))}
-                initialFocus
                 className="rounded-md border"
               />
             </div>
@@ -476,7 +473,7 @@ export function HomeWishCard({ wish, isUnknownDateCard = false, isAchievementCar
                       id="image"
                       type="url"
                       value={editForm.customwish_image_url}
-                      onChange={(e) => setEditForm({ ...prev, customwish_image_url: e.target.value })}
+                      onChange={(e) => setEditForm({ ...editForm, customwish_image_url: e.target.value })}
                       placeholder="https://..."
                     />
                   </div>
@@ -541,10 +538,9 @@ export function HomeWishCard({ wish, isUnknownDateCard = false, isAchievementCar
                 達成日
               </Label>
               <Calendar
-                mode="single"
                 selected={achievementDate}
                 onSelect={setAchievementDate}
-                initialFocus
+                mode="single"
                 className="rounded-md border"
               />
             </div>

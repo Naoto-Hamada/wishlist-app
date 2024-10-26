@@ -8,7 +8,6 @@ import { useSupabase } from '../utils/supabase'
 import { SessionContextProvider, useSession, useUser } from '@supabase/auth-helpers-react'
 import { userprofile } from '../utils/interface'
 import { useRouter } from 'next/navigation'
-import { UserAuth } from '../utils/interface'
 
 type LayoutProps = {
   children: ReactNode
@@ -19,11 +18,12 @@ export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [userProfile, setUserProfile] = useState<userprofile | null>(null)
-  const [currentUser, setCurrentUser] = useState<UserAuth | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const router = useRouter()
-  const user = useUser()
+
   const supabase = useSupabase()
   const session = useSession()
+  const user = useUser()
   const pathname = usePathname()
 
   // ユーザー情報とプロファイル情報を取得
@@ -88,8 +88,8 @@ export function Layout({ children }: LayoutProps) {
       } catch (error) {
         console.error('詳細なエラー情報:', {
           error,
-          message: error.message,
-          code: error.code
+          message: error instanceof Error ? error.message : '不明なエラー',
+          code: error instanceof Error && 'code' in error ? error.code : '不明なコード'
         })
         if (pathname !== '/login') router.push('/login')
       } finally {
@@ -109,7 +109,7 @@ export function Layout({ children }: LayoutProps) {
       setUserProfile(null)
       router.push('/login')
     } catch (error) {
-      console.error('ログアウトに失敗しました:', error.message)
+      console.error('ログアウトに失敗しました:', (error as Error).message)
     } finally {
       setShowLogoutConfirm(false)
     }

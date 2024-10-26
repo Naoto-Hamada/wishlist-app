@@ -1,6 +1,8 @@
 'use client'
 
-import NotFound from '@/components/NotFound' // 直接インポート
+import dynamic from 'next/dynamic'
+
+const NotFound = dynamic(() => import('@/components/NotFound'), { ssr: false })
 
 export default function NotFoundPage() {
   return (

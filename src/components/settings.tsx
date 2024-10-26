@@ -107,11 +107,11 @@ export function Settings() {
 
       // プロフィール情報の更新
       const updates: Partial<userprofile> = {
-        nickname: nickname === '（未入力）' ? null : nickname,
-        age: age === '（未入力）' ? null : parseInt(age),
-        gender: gender === '（未入力）' ? null : gender,
-        postal_code: postalCode === '（未入力）' ? null : postalCode,
-        address: address === '（未入力）' ? null : address,
+        nickname: nickname === '（未入力）' ? undefined : nickname,
+        age: age === '（未入力）' ? undefined : parseInt(age),
+        gender: gender === '（未入力）' ? undefined : gender,
+        postal_code: postalCode === '（未入力）' ? undefined : postalCode,
+        address: address === '（未入力）' ? undefined : address,
         updated_at: new Date().toISOString()
       }
       console.log('Updates to be sent:', updates) // 更新データの確認

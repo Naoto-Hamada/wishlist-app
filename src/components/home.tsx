@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, SetStateAction } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts"
 import { WishCustom } from '@/utils/interface'
-import { HomeWishCard } from './home-wish-card.tsx'  // 新しいコンポーネントをインポート
+import { HomeWishCard } from './home-wish-card'  // 新しいコンポーネントをインポート
 import { getCurrentUser, getWishesByStatus, getMonthlyAchievements } from '@/utils/supabaseFunctions'
 
 export function HomeComponent() {
@@ -103,11 +103,10 @@ export function HomeComponent() {
       "1年": 12,
       "全期間": null
     }
-
     async function fetchAchievementData() {
-      const { data } = await getMonthlyAchievements(user?.id, periods[selectedPeriod]);
+      const { data } = await getMonthlyAchievements(user?.id, periods[selectedPeriod] as number | null);
       if (data) {
-        setChartData(data);
+        setChartData(data as { month: string; count: number }[]);
       }
       // 期間選択時にselectedMonthをリセット
       setSelectedMonth(null);
@@ -120,10 +119,10 @@ export function HomeComponent() {
     }
   }, [selectedPeriod, user]);
 
-  const handleBarClick = async (data) => {
+  const handleBarClick = async (data: { month: SetStateAction<null> }) => {
     setSelectedMonth(data.month);
-    if (user) {
-      const [year, month] = data.month.replace('年', '/').replace('月', '').split('/');
+    if (user && typeof data.month === 'string') {
+      const [year, month] = data.month.split(/年|月/);
       const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
       const endDate = new Date(parseInt(year), parseInt(month), 0);
 
@@ -244,7 +243,7 @@ export function HomeComponent() {
                       dataKey="count"
                       position="center"
                       fill="white"
-                      formatter={(value) => value > 0 ? value : ''} // 0の場合は表示しない
+                      formatter={(value: number) => value > 0 ? value : ''} // 0の場合は表示しない
                       style={{ fontSize: '14px', fontWeight: 'bold' }}
                     />
                   </Bar>

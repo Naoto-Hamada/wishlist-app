@@ -39,6 +39,8 @@ export function HomeComponent() {
   })
   // 状態の追加
   const [unknownDateWishes, setUnknownDateWishes] = useState<WishCustom[]>([])
+  // 新しい状態を追加
+  const [filteredAchievements, setFilteredAchievements] = useState<WishCustom[]>([]);
 
   // ユーザー情報と達成状況の取得を統合
   useEffect(() => {
@@ -81,12 +83,45 @@ export function HomeComponent() {
     fetchUserAndData()
   }, [])
 
+  // 期間に基づいてデータをフィルタリングする関数
+  const filterAchievementsByPeriod = async (period: string) => {
+    if (!user) return;
+
+    const now = new Date();
+    let startDate = new Date();
+
+    switch (period) {
+      case "1ヶ月":
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case "3ヶ月":
+        startDate.setMonth(now.getMonth() - 3);
+        break;
+      case "1年":
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        startDate = new Date(0); // 全期間の場合は最古の日付
+    }
+
+    const { data } = await getWishesByStatus(user.id, 'やったことある');
+    if (data) {
+      const filtered = data.filter(wish => {
+        if (!wish.achievement_date) return false;
+        const achievementDate = new Date(wish.achievement_date);
+        return achievementDate >= startDate && achievementDate <= now;
+      });
+      setFilteredAchievements(filtered);
+    }
+  };
+
+  // 期間選択時の処理を更新
   useEffect(() => {
     const periods = {
       "1ヶ月": 1,
       "3ヶ月": 3,
       "1年": 12,
-      "全期間": null  // nullを渡すことで、関数側で全期間を計算
+      "全期間": null
     }
 
     async function fetchAchievementData() {
@@ -94,6 +129,10 @@ export function HomeComponent() {
       if (data) {
         setChartData(data);
       }
+      // 期間選択時にselectedMonthをリセット
+      setSelectedMonth(null);
+      // 期間に基づくフィルタリングを実行
+      await filterAchievementsByPeriod(selectedPeriod);
     }
 
     if (user) {
@@ -112,15 +151,15 @@ export function HomeComponent() {
       const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
       const endDate = new Date(parseInt(year), parseInt(month), 0);
 
-      const { data: achievements } = await supabase
-        .from('WishCustom')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'やったことある')
-        .gte('achievement_date', startDate.toISOString())
-        .lte('achievement_date', endDate.toISOString());
-
-      setSelectedMonthAchievements(achievements || []);
+      const { data: achievements } = await getWishesByStatus(user.id, 'やったことある');
+      if (achievements) {
+        const filtered = achievements.filter(wish => {
+          if (!wish.achievement_date) return false;
+          const achievementDate = new Date(wish.achievement_date);
+          return achievementDate >= startDate && achievementDate <= endDate;
+        });
+        setFilteredAchievements(filtered);
+      }
     }
   }
 
@@ -129,6 +168,20 @@ export function HomeComponent() {
     // この関数は必要に応じて実装
     console.log('Move handler called', item, toSelected)
   }
+
+  // 期間表示用のヘルパー関数を追加
+  const getPeriodDisplayText = (period: string, selectedMonth: string | null) => {
+    if (selectedMonth) return `${selectedMonth}の実現したこと一覧`;
+    
+    switch (period) {
+      case "3ヶ月":
+        return "直近3ヶ月間の実現したこと一覧";
+      case "1年":
+        return "1年間の実現したこと一覧";
+      default:
+        return "全期間の実現したこと一覧";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] pb-8">
@@ -230,24 +283,27 @@ export function HomeComponent() {
             </div>
 
             {/* 実現したこと一覧表示エリアの修正 */}
-            <div className="mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
-              {selectedMonth ? (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">{selectedMonth}の実現したこと一覧</h3>
-                  <ul className="space-y-1 text-left">
-                    {selectedMonthAchievements.map((achievement) => (
-                      <li key={achievement.custom_wish_id} className="text-sm text-gray-600">
-                        {achievement.title}
-                      </li>
-                    ))}
-                  </ul>
+            <div className="mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">
+                  {getPeriodDisplayText(selectedPeriod, selectedMonth)}
+                </h3>
+                <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6
+                  grid-cols-2 
+                  sm:grid-cols-3 
+                  md:grid-cols-4 
+                  lg:grid-cols-5 
+                  max-w-[2000px] mx-auto"
+                >
+                  {filteredAchievements.map((wish) => (
+                    <HomeWishCard
+                      key={wish.custom_wish_id}
+                      wish={wish}
+                      isAchievementCard={true}  // 新しいプロパティを追加
+                    />
+                  ))}
                 </div>
-              ) : (
-                <div className="flex items-center justify-center text-gray-500">
-                  <Info className="h-5 w-5 mr-2" />
-                  <span>棒グラフをクリックすると実現したこと一覧が表示されます</span>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </section>

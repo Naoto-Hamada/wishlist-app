@@ -151,7 +151,7 @@ export function Layout({ children }: LayoutProps) {
         {/* ヘッダー */}
         <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-teal-400 to-blue-500 p-4 text-white flex justify-between items-center z-20">
           <Link href="/" className="text-xl font-bold hover:text-gray-200 transition-colors duration-200">
-            Wish List
+            ゆめマッチ
           </Link>
           <div className="flex items-center">
             <Link href="/settingspage" className="mr-4 hover:text-gray-200 transition-colors duration-200">
@@ -269,7 +269,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* フッター */}
         <footer className="bg-gray-800 text-white p-4 text-center fixed bottom-0 left-0 right-0 z-20">
-          <p>&copy; 2024 Wish List. All rights reserved.</p>
+          <p>&copy; 2024 ゆめマッチ. All rights reserved.</p>
         </footer>
       </div>
     </SessionContextProvider>

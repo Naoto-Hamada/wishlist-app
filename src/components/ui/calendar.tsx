@@ -4,7 +4,6 @@ import { format, parse, isValid } from 'date-fns';
 interface CalendarProps {
   selected: Date | undefined;
   onSelect: (date: Date) => void;
-  initialFocus?: boolean;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect }) => {

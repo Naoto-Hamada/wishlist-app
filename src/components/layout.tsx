@@ -8,7 +8,6 @@ import { useSupabase } from '../utils/supabase'
 import { SessionContextProvider, useSession, useUser } from '@supabase/auth-helpers-react'
 import { userprofile } from '../utils/interface'
 import { useRouter } from 'next/navigation'
-import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { UserAuth } from '../utils/interface'
 
 type LayoutProps = {

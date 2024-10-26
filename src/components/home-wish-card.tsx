@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { WishCustom } from '@/utils/interface'
 import { useState } from 'react'
-import { Pen, Trophy, Sparkles, Clock, Wallet } from 'lucide-react'
+import { Pen, Trophy, Clock, Wallet } from 'lucide-react'
 import { updateCustomWish } from '@/utils/supabaseFunctions'
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"

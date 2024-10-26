@@ -6,25 +6,6 @@ import { WishCustom } from '@/utils/interface'
 import { HomeWishCard } from './home-wish-card.tsx'  // 新しいコンポーネントをインポート
 import { getCurrentUser, getWishesByStatus, getMonthlyAchievements } from '@/utils/supabaseFunctions'
 
-// 仮のデータ生成関数
-const generateData = (months: number) => {
-  const currentDate = new Date()
-  const data = []
-  for (let i = 0; i < months; i++) {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
-    data.unshift({
-      month: `${date.getFullYear()}年${date.getMonth() + 1}月`,
-      count: Math.floor(Math.random() * 10) + 1
-    })
-  }
-  return data
-}
-
-// 仮の達成状況データ生成関数
-const generateAchievements = (count: number) => {
-  return Array.from({ length: count }, (_, i) => `実現したこと${i + 1}`)
-}
-
 export function HomeComponent() {
   const [selectedPeriod, setSelectedPeriod] = useState("全期間")
   const [selectedMonth, setSelectedMonth] = useState(null)
@@ -100,7 +81,7 @@ export function HomeComponent() {
         startDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
-        startDate = new Date(0); // 全期間の場合は最古の日付
+        startDate = new Date(0); // 全期間の��合は最古の日付
     }
 
     const { data } = await getWishesByStatus(user.id, 'やったことある');
@@ -139,10 +120,6 @@ export function HomeComponent() {
     }
   }, [selectedPeriod, user]);
 
-  const handleTaskClick = (taskId) => {
-    console.log(`タスク ${taskId} がクリックされました`)
-  }
-
   const handleBarClick = async (data) => {
     setSelectedMonth(data.month);
     if (user) {
@@ -160,12 +137,6 @@ export function HomeComponent() {
         setFilteredAchievements(filtered);
       }
     }
-  }
-
-  // onMoveハンドラーを追加
-  const handleMove = async (item: WishCustom, toSelected: boolean) => {
-    // この関数は必要に応じて実装
-    console.log('Move handler called', item, toSelected)
   }
 
   // 期間表示用のヘルパー関数を追加

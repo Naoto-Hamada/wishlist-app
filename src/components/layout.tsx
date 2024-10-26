@@ -4,10 +4,8 @@ import { ReactNode, useState, useEffect } from "react"
 import { Menu, X, Home, Sparkles, ListChecks, Rocket, Settings, MessageCircle, LogOut } from "lucide-react"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Card, CardContent, Button } from '@mui/material'
 import { useSupabase } from '../utils/supabase'
 import { SessionContextProvider, useSession, useUser } from '@supabase/auth-helpers-react'
-import { getUserProfile } from '../utils/supabaseFunctions'
 import { userprofile } from '../utils/interface'
 import { useRouter } from 'next/navigation'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'

@@ -9,16 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
 import { getCurrentUser, getWishesByStatus, updateCustomWish, getUserProfile } from '@/utils/supabaseFunctions'
 import ReactMarkdown from 'react-markdown'
 import { WishCustom } from '@/utils/interface'
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
-import { ja } from "date-fns/locale" // 日本語ローカライズ
 import { Check } from 'lucide-react'
 import { sendToDify } from '@/utils/dify'
 

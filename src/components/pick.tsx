@@ -5,7 +5,6 @@ import { DndProvider, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getCurrentUser, getWishesByStatus, updateWishStatus, createCustomWish, updateCustomWish } from '@/utils/supabaseFunctions'
 import { WishCustom } from '@/utils/interface'
-import Image from 'next/image'
 import { WishItemCard } from './wish-item-card'  // 新しくインポート
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog" // DialogTriggerを追加
 import { AlertCircle, Check, Pen } from 'lucide-react' // 追加

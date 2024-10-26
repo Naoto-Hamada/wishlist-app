@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts"
-import { Home, List, Calendar, Settings, ChevronRight, Info } from "lucide-react"
 import { WishCustom } from '@/utils/interface'
 import { HomeWishCard } from './home-wish-card.tsx'  // 新しいコンポーネントをインポート
 import { getCurrentUser, getWishesByStatus, getMonthlyAchievements } from '@/utils/supabaseFunctions'

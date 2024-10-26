@@ -6,10 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Pen, Check } from 'lucide-react'
-import { getUserProfile } from '@/utils/supabaseFunctions'
 import { useSupabase } from '@/utils/supabaseFunctions'
 import { userprofile } from '@/utils/interface'
 import { updateUserProfile } from '@/utils/supabaseFunctions'

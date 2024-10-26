@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Edit, Clock, DollarSign, Sparkles, Trophy } from 'lucide-react'
+import { Edit, Clock, Wallet, Sparkles, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog'
@@ -296,7 +296,7 @@ export function WishlistDetailComponent() {
                   <span className="break-words">{selectedItem?.duration}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5 text-gray-500" />
+                  <Wallet className="h-5 w-5 text-gray-500" />
                   <span className="break-words">{selectedItem?.cost}</span>
                 </div>
               </div>

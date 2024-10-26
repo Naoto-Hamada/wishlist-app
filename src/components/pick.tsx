@@ -3,25 +3,22 @@
 import { useState, useEffect } from 'react'
 import { DndProvider, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { getCurrentUser, getWishesByStatus, updateWishStatus, createCustomWish, updateCustomWish } from '@/utils/supabaseFunctions'
+import { getCurrentUser, getWishesByStatus, updateWishStatus, createCustomWish } from '@/utils/supabaseFunctions'
 import { WishCustom } from '@/utils/interface'
 import { WishItemCard } from './wish-item-card'  // 新しくインポート
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog" // DialogTriggerを追加
-import { AlertCircle, Check, Pen } from 'lucide-react' // 追加
+import { AlertCircle, Check } from 'lucide-react' // 追加
 
 export function WishlistMatching() {
   const [selectedItems, setSelectedItems] = useState<WishCustom[]>([])
   const [remainingItems, setRemainingItems] = useState<WishCustom[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{
+    id: string;
+    [key: string]: any;
+  } | null>(null)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false) // 追加
-  const [customWish, setCustomWish] = useState({ // 追加
-    title: '',
-    detail: '',
-    duration: '',
-    cost: '',
-  })
 
   // ユーザー情報の取得
   useEffect(() => {
@@ -111,7 +108,7 @@ export function WishlistMatching() {
       detail: customWish.detail,
       duration: customWish.duration,
       cost: Number(customWish.cost),
-      base_wish_id: null,
+      base_wish_id: undefined,
       customwish_image_url: `https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`,
       user_id: user.user?.id,
       status: 'やりたい',
@@ -379,5 +376,4 @@ function ItemsArea({ items, isSelected, onMove }: ItemsAreaProps) {
     </div>
   )
 }
-
 

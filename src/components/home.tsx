@@ -6,12 +6,18 @@ import { WishCustom } from '@/utils/interface'
 import { HomeWishCard } from './home-wish-card'  // 新しいコンポーネントをインポート
 import { getCurrentUser, getWishesByStatus, getMonthlyAchievements } from '@/utils/supabaseFunctions'
 
+// ユーザー型の定義を追加
+type User = {
+  id: string;
+  // 必要に応じて他のユーザープロパティを追加
+};
+
 export function HomeComponent() {
   const [selectedPeriod, setSelectedPeriod] = useState("全期間")
   const [selectedMonth, setSelectedMonth] = useState(null)
   const [chartData, setChartData] = useState([])
   const [recentWishes, setRecentWishes] = useState<WishCustom[]>([])
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   // 達成状況の状態を追加
   const [achievements, setAchievements] = useState({
     total: 0,
@@ -81,7 +87,7 @@ export function HomeComponent() {
         startDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
-        startDate = new Date(0); // 全期間の��合は最古の日付
+        startDate = new Date(0); // 全期間の合は最古の日付
     }
 
     const { data } = await getWishesByStatus(user.id, 'やったことある');

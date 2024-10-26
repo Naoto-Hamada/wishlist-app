@@ -5,7 +5,6 @@ import { Menu, X, Home, Sparkles, ListChecks, Rocket, Settings, MessageCircle, L
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSupabase } from '../utils/supabase'
-import { SessionContextProvider, useSession, useUser } from '@supabase/auth-helpers-react'
 import { userprofile } from '../utils/interface'
 import { useRouter } from 'next/navigation'
 
@@ -18,12 +17,9 @@ export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [userProfile, setUserProfile] = useState<userprofile | null>(null)
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const router = useRouter()
 
   const supabase = useSupabase()
-  const session = useSession()
-  const user = useUser()
   const pathname = usePathname()
 
   // ユーザー情報とプロファイル情報を取得
@@ -105,7 +101,6 @@ export function Layout({ children }: LayoutProps) {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
-      setCurrentUser(null)
       setUserProfile(null)
       router.push('/login')
     } catch (error) {

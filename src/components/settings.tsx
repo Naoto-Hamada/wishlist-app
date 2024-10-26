@@ -38,7 +38,6 @@ export function Settings() {
   const [isChanged, setIsChanged] = useState(false)
   const [nickname, setNickname] = useState('')
   const [authProvider, setAuthProvider] = useState<AuthProvider>('email')
-  const [userProfile, setUserProfile] = useState<userprofile | null>(null)
 
   const supabase = useSupabase()
 
@@ -46,15 +45,18 @@ export function Settings() {
     const fetchUserProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // userprofileテーブルから直接取得
         const { data: profile, error } = await supabase
           .from('userprofile')
           .select('*')
           .eq('id', user.id)
           .single()
 
+        if (error) {
+          console.error('プロフィール取得エラー:', error)
+          return
+        }
+
         if (profile) {
-          setUserProfile(profile)
           setEmail(user.email || '（未入力）')
           setNickname(profile.nickname || '（未入力）')
           setAge(profile.age?.toString() || '（未入力）')
@@ -74,13 +76,13 @@ export function Settings() {
     }
 
     fetchUserProfile()
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     if (editing === 'age' && age === '') {
       setAge('30');
     }
-  }, [editing]);
+  }, [editing, age]);
 
   const handleEdit = (field: string) => {
     setEditing(editing === field ? null : field)

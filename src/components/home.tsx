@@ -37,6 +37,8 @@ export function HomeComponent() {
     total: 0,
     thisYear: 0
   })
+  // 状態の追加
+  const [unknownDateWishes, setUnknownDateWishes] = useState<WishCustom[]>([])
 
   // ユーザー情報と達成状況の取得を統合
   useEffect(() => {
@@ -47,6 +49,14 @@ export function HomeComponent() {
         // 直近やりたいことの取得
         const { data: recentData } = await getWishesByStatus(user.id, '直近やりたい')
         if (recentData) setRecentWishes(recentData)
+
+        // 達成月不明の願望を取得
+        const { data: unknownData } = await getWishesByStatus(user.id, 'やったことある')
+        if (unknownData) {
+          // achievement_dateが未入力のものだけをフィルタリング
+          const filteredData = unknownData.filter(wish => !wish.achievement_date)
+          setUnknownDateWishes(filteredData)
+        }
 
         // 達成状況の取得
         const { data: achievedWishes } = await getWishesByStatus(user.id, 'やったことある')
@@ -159,7 +169,7 @@ export function HomeComponent() {
         </section>
 
         {/* 過去の達成状況 */}
-        <section className="bg-white rounded-lg p-4 shadow-md">
+        <section className="mb-8 bg-white rounded-lg p-4 shadow-md">
           <h2 className="text-xl font-semibold mb-4">過去の達成状況</h2>
           <div className="bg-white p-4 rounded-lg shadow-sm border border-cyan-100">
             {/* 期間選択ボタン */}
@@ -239,6 +249,26 @@ export function HomeComponent() {
                 </div>
               )}
             </div>
+          </div>
+        </section>
+
+        {/* 達成月不明セクション */}
+        <section className="mb-8 bg-white rounded-lg p-4 shadow-md">
+          <h2 className="text-xl font-semibold mb-4">達成月不明</h2>
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6
+            grid-cols-2 
+            sm:grid-cols-3 
+            md:grid-cols-4 
+            lg:grid-cols-5 
+            max-w-[2000px] mx-auto"
+          >
+            {unknownDateWishes.map((wish) => (
+              <HomeWishCard
+                key={wish.custom_wish_id}
+                wish={wish}
+                isUnknownDateCard={true}  // このプロパティを追加
+              />
+            ))}
           </div>
         </section>
       </div>

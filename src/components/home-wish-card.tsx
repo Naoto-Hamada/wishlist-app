@@ -24,9 +24,10 @@ import { Separator } from "@/components/ui/separator"
 
 interface HomeWishCardProps {
   wish: WishCustom
+  isUnknownDateCard?: boolean  // 新しいプロパティを追加
 }
 
-export function HomeWishCard({ wish }: HomeWishCardProps) {
+export function HomeWishCard({ wish, isUnknownDateCard = false }: HomeWishCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isAchievedDialogOpen, setIsAchievedDialogOpen] = useState(false)
@@ -39,6 +40,12 @@ export function HomeWishCard({ wish }: HomeWishCardProps) {
     cost: wish.cost.toString(),
     customwish_image_url: wish.customwish_image_url,
     goal: wish.goal || ''
+  })
+
+  // 達成月不明用の状態
+  const [unknownDateForm, setUnknownDateForm] = useState({
+    achievement_date: wish.achievement_date ? new Date(wish.achievement_date) : undefined,
+    thoughts: wish.thoughts || ''
   })
 
   const defaultImageUrl = 'https://images.unsplash.com/photo-1455849318743-b2233052fcff?q=80&w=3869&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
@@ -79,6 +86,143 @@ export function HomeWishCard({ wish }: HomeWishCardProps) {
     setThoughts("");
     window.location.reload();
   };
+
+  // 達成月不明用の保存ハンドラー
+  const handleUnknownDateSubmit = async () => {
+    const { error } = await updateCustomWish(wish.custom_wish_id, {
+      achievement_date: unknownDateForm.achievement_date ? 
+        format(unknownDateForm.achievement_date, 'yyyy-MM-dd') : null,
+      thoughts: unknownDateForm.thoughts,
+      updated_at: new Date().toISOString()
+    })
+
+    if (!error) {
+      setIsOpen(false)
+      window.location.reload()
+    }
+  }
+
+  // ダイアログの内容を条件分岐
+  const renderDialogContent = () => {
+    if (isUnknownDateCard) {
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              達成情報の編集
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">
+                達成日
+              </Label>
+              <Calendar
+                mode="single"
+                selected={unknownDateForm.achievement_date}
+                onSelect={(date) => setUnknownDateForm(prev => ({ ...prev, achievement_date: date }))}
+                initialFocus
+                className="rounded-md border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="thoughts" className="text-sm font-semibold text-gray-700">
+                達成した感想
+              </Label>
+              <Textarea
+                id="thoughts"
+                value={unknownDateForm.thoughts}
+                onChange={(e) => setUnknownDateForm(prev => ({ ...prev, thoughts: e.target.value }))}
+                className="min-h-[150px]"
+                placeholder="達成してみてどうでしたか？"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleUnknownDateSubmit}
+              className="w-full bg-gradient-to-r from-teal-400 to-blue-500 text-white"
+            >
+              変更を保存する
+            </Button>
+          </DialogFooter>
+        </>
+      )
+    }
+
+    // 既存のダイアログ内容を返す
+    return (
+      <>
+        <div className="relative w-full" style={{ paddingBottom: '61.8%' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsEditing(true)
+            }}
+            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 z-10 transition-opacity"
+          >
+            <Pen className="w-4 h-4 text-gray-600" />
+          </button>
+
+          <Image
+            src={wish.customwish_image_url || defaultImageUrl}
+            alt={wish.title}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-t-lg"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = defaultImageUrl
+            }}
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 py-1.5">
+            <div className="flex flex-wrap items-center justify-start gap-2 px-2">
+              <div className="inline-flex items-center px-3 py-1 rounded-md bg-white/20 backdrop-blur-sm">
+                <Clock className="w-4 h-4 mr-1 text-white" />
+                <span className="text-white font-medium text-sm">{wish.duration}</span>
+              </div>
+              <div className="inline-flex items-center px-3 py-1 rounded-md bg-white/20 backdrop-blur-sm">
+                <Wallet className="w-4 h-4 mr-1 text-white" />
+                <span className="text-white font-medium text-sm">¥{wish.cost.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-3">
+          <div className="space-y-2">
+            <DialogTitle className="text-lg font-semibold mb-1">{wish.title}</DialogTitle>
+            <p className="text-sm text-gray-600">{wish.detail}</p>
+          </div>
+          
+          {wish.goal && (
+            <div className="mt-4">
+              <Card className="bg-gradient-to-r from-teal-50 to-blue-50 border-none shadow-sm">
+                <div className="p-3 space-y-2">
+                  <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-gradient-to-r from-teal-400 to-blue-500 w-fit">
+                    <span className="text-white font-medium text-sm">ゴール</span>
+                  </div>
+                  <ReactMarkdown 
+                    className="prose prose-sm max-w-none text-gray-600 prose-p:my-1 prose-headings:my-2"
+                  >
+                    {wish.goal}
+                  </ReactMarkdown>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          <Button
+            onClick={() => setIsAchievedDialogOpen(true)}
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 rounded-lg mt-2"
+          >
+            <Trophy className="w-5 h-5 mr-2" />
+            達成！
+          </Button>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -211,75 +355,7 @@ export function HomeWishCard({ wish }: HomeWishCardProps) {
               </CardFooter>
             </Card>
           ) : (
-            <>
-              <div className="relative w-full" style={{ paddingBottom: '61.8%' }}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsEditing(true)
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 z-10 transition-opacity"
-                >
-                  <Pen className="w-4 h-4 text-gray-600" />
-                </button>
-
-                <Image
-                  src={wish.customwish_image_url || defaultImageUrl}
-                  alt={wish.title}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-t-lg"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = defaultImageUrl
-                  }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 py-1.5">
-                  <div className="flex flex-wrap items-center justify-start gap-2 px-2">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-white/20 backdrop-blur-sm">
-                      <Clock className="w-4 h-4 mr-1 text-white" />
-                      <span className="text-white font-medium text-sm">{wish.duration}</span>
-                    </div>
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-white/20 backdrop-blur-sm">
-                      <Wallet className="w-4 h-4 mr-1 text-white" />
-                      <span className="text-white font-medium text-sm">¥{wish.cost.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 space-y-3">
-                <div className="space-y-2">
-                  <DialogTitle className="text-lg font-semibold mb-1">{wish.title}</DialogTitle>
-                  <p className="text-sm text-gray-600">{wish.detail}</p>
-                </div>
-                
-                {wish.goal && (
-                  <div className="mt-4">
-                    <Card className="bg-gradient-to-r from-teal-50 to-blue-50 border-none shadow-sm">
-                      <div className="p-3 space-y-2">
-                        <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-gradient-to-r from-teal-400 to-blue-500 w-fit">
-                          <span className="text-white font-medium text-sm">ゴール</span>
-                        </div>
-                        <ReactMarkdown 
-                          className="prose prose-sm max-w-none text-gray-600 prose-p:my-1 prose-headings:my-2"
-                        >
-                          {wish.goal}
-                        </ReactMarkdown>
-                      </div>
-                    </Card>
-                  </div>
-                )}
-
-                <Button
-                  onClick={() => setIsAchievedDialogOpen(true)}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 rounded-lg mt-2"
-                >
-                  <Trophy className="w-5 h-5 mr-2" />
-                  達成！
-                </Button>
-              </div>
-            </>
+            renderDialogContent()
           )}
         </DialogContent>
       </Dialog>
